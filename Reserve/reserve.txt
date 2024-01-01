@@ -1,0 +1,267 @@
+  <!-- ======= Facts Section ======= -->
+  <section id="facts" class="facts">
+    <div class="container" data-aos="fade-up">
+
+      <div class="section-title">
+        <h2>Facts</h2>
+        <p>Over 7+ years of experience in the data consultancy domain with a cross industry analytics experience having served fortune 50 client with an estimated monetary impact of 800K+</p>
+      </div>
+
+      <div class="row counters">
+
+        <div class="col-lg-3 col-6 text-center">
+          <span data-purecounter-start="0" data-purecounter-end="3" data-purecounter-duration="1" class="purecounter"></span>
+          <p>Industries</p>
+        </div>
+
+        <div class="col-lg-3 col-6 text-center">
+          <span data-purecounter-start="0" data-purecounter-end="10" data-purecounter-duration="1" class="purecounter"></span>
+          <p>Team Size</p>
+        </div>
+
+        <div class="col-lg-3 col-6 text-center">
+          <span data-purecounter-start="0" data-purecounter-end="800000" data-purecounter-duration="1" class="purecounter"></span>
+          <p>Total Impact</p>
+        </div>
+
+        <div class="col-lg-3 col-6 text-center">
+          <span data-purecounter-start="0" data-purecounter-end="7" data-purecounter-duration="1" class="purecounter"></span>
+          <p>Experience</p>
+        </div>
+
+      </div>
+
+    </div>
+  </section><!-- End Facts Section -->
+
+
+
+
+
+########################################################## Old Index ################################################
+<!-- home.html -->
+{% extends "base copy.html" %}
+
+{% block title %}Prajwal Ram Gowda - Home{% endblock %}
+
+{% block content %}
+  <!-- Masthead-->
+<header class="masthead">
+  <div class="container px-4 px-lg-5 d-flex h-100 align-items-center justify-content-center">
+      <div class="d-flex justify-content-center">
+          <div class="text-center">
+              <h1 class="mx-auto my-0 text-uppercase">Prajwal Ram Gowda</h1>
+              <h2 class="text-white-50 mx-auto mt-2 mb-5">Data and Decision Sciences</h2>
+              <a class="btn btn-primary" href="{{ url_for('about') }}">About</a>
+          </div>
+      </div>
+  </div>
+</header>
+{% endblock %}
+
+########################################################## Old BASE ################################################
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta content="width=device-width, initial-scale=1.0" name="viewport">
+      
+        <title>{% block title %}Prajwal Ram Gowda{% endblock %}</title>
+        <meta content="" name="description">
+        <meta content="" name="keywords">
+      
+        <!-- Favicons -->
+        <!-- Favicons -->
+        <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='img/favicons/apple-touch-icon.png') }}">
+        <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/favicons/favicon-32x32.png') }}">
+        <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='img/favicons/favicon-16x16.png') }}">
+        <link rel="manifest" href="{{ url_for('static', filename='img/favicons/site.webmanifest') }}">
+
+        
+        <!-- Font Awesome icons (free version)-->
+        <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+        <!-- Google fonts-->
+        <link href="https://fonts.googleapis.com/css?family=Varela+Round" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet" />
+        <!-- Core theme CSS (includes Bootstrap)-->
+        <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet" />
+    </head>
+    <body id="page-top">
+        <!-- Navigation-->
+        <nav class="navbar navbar-expand-lg navbar-dark fixed-top" id="mainNav">
+            <div class="container px-4 px-lg-5">
+                <a class="navbar-brand" href="{{ url_for('index') }}">Prajwal Ram Gowda</a>
+                <button class="navbar-toggler navbar-toggler-right" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+                    Menu
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarResponsive">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}">Home</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('about') }}">About</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('contact') }}">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        {% block content %}
+        <!-- Default content goes here -->
+        {% endblock %}
+
+        <!-- Footer-->
+        <footer class="footer bg-black small text-center text-white-50"><div class="container px-4 px-lg-5">Copyright &copy; Prajwal Ram Gowda 2023</div></footer>
+        <!-- Bootstrap core JS-->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- Core theme JS-->
+        <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+
+    </body>
+</html>
+
+
+
+## HANDLE MARKDOWNS
+   <!-- Modal for Adding Markdown File -->
+   <div class="modal fade" id="add-md-modal" tabindex="-1" aria-labelledby="addMdModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <h5 class="modal-title" id="addMdModalLabel">Add New Markdown File</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                  <form id="addMdForm" onsubmit="event.preventDefault(); handleAdd('markdownFilesTable');">
+                      <div class="mb-3">
+                          <label for="mdName" class="form-label">File Name</label>
+                          <input type="text" class="form-control" id="mdName" required>
+                      </div>
+                      <div class="mb-3">
+                          <label for="categoryDropdown" class="form-label">Category</label>
+                          <select id="categoryDropdown" class="form-control">
+                              <!-- Populate this dropdown dynamically with categories from your backend -->
+                          </select>
+                      </div>
+                      <div class="mb-3">
+                          <label for="mdFile" class="form-label">Upload Markdown File</label>
+                          <input type="file" class="form-control" id="mdFile" accept=".md" required>
+                      </div>
+                      <div class="mb-3">
+                          <label for="authorName" class="form-label">Author Name</label>
+                          <input type="text" class="form-control" id="authorName" required>
+                      </div>
+                      <button type="submit" class="btn btn-primary">Add File</button>
+                  </form>
+              </div>
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              </div>
+          </div>
+      </div>
+   </div>
+
+   else if (tableId === 'markdownFilesTable') {
+        console.log("entering function")
+        const mdName = document.getElementById('mdName').value;
+        const categoryId = document.getElementById('categoryDropdown').value;
+        const authorName = document.getElementById('authorName').value;
+        const mdFileInput = document.getElementById('mdFile');
+        
+        if (mdName && categoryId && authorName && mdFileInput.files[0]) {
+            const file = mdFileInput.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const fileContent = e.target.result;
+                
+                $.post(`/create_markdown_file`, {
+                    name: mdName,
+                    category_id: categoryId,
+                    content: fileContent,
+                    author_name: authorName
+                }, function (data) {
+                    if (data.status === 'success') {
+                        // Refresh the table
+                        $(`#${tableId}`).bootstrapTable('refresh');
+
+                        // Clear the input fields and close the modal
+                        document.getElementById('addMdForm').reset();
+                        $('#add-md-modal').modal('hide');
+                    }
+                });
+            };
+            
+            reader.readAsText(file);
+        }
+    }
+
+      <!-- Categories Table -->
+      <div class="container mt-5">
+          <h2>Posts</h2>
+          <table 
+              id="postsTable" 
+              data-toggle="table" 
+              data-url="{{ url_for('get_posts') }}" 
+              data-pagination="true" 
+              data-search="true" 
+              data-show-refresh="true" 
+              data-show-toggle="true" 
+              data-toolbar="#postsToolbar">
+              <thead>
+                  <tr>
+                      <th data-field="operate" data-formatter="operateFormatter" data-events="operateEvents" data-table-id="categoriesTable">Actions</th>
+                      <th data-field="id">Post ID</th>
+                      <th data-field="name">Title</th>
+                      <th data-field="category_id">Category ID</th>
+                      <th data-field="content">Content</th>
+                      <th data-field="upload_date">Upload Date</th>
+                      <th data-field="modification_date">Modification Date</th>
+                      <th data-field="author_name">Author Name</th>
+                  </tr>
+              </thead>
+          </table>
+          <div id="postsToolbar">
+              <button id="addPost" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#add-md-modal">
+              Add Post
+              </button>
+          </div>
+      </div>
+
+# -------------------------------------------------
+# Handling Posts
+# -------------------------------------------------
+@app.route('/get_posts', methods=['GET'])
+def get_posts():
+    posts = MarkdownFile.query.all()
+    data = [{'id': post.id, 'name': post.name, 'category_id': post.category_id, 'content': post.content, 'upload_date': post.upload_date, 'modification_date': post.modification_date, 'author_name': post.author_date} for post in posts]
+    return jsonify({'total': len(data), 'rows': data})
+
+@app.route('/create_markdown_file', methods=['POST'])
+def create_markdown_file():
+    try:
+        # Extract data from the request
+        name = request.form['name']
+        category_id = request.form['category_id']
+        content = request.form['content']
+        author_name = request.form['author_name']
+
+        # Preprocess content if necessary (for this example, I'm assuming no preprocessing is done)
+        # processed_content = preprocess_content(content)  # Define this function if you need preprocessing
+
+        # Create a new MarkdownFile object
+        markdown_file = MarkdownFile(
+            name=name,
+            category_id=category_id,
+            content=content,
+            upload_date=datetime.utcnow(),  # Setting the current date and time
+            modification_date=datetime.utcnow(),  # Setting the current date and time
+            author_name=author_name
+        )
+
+        # Add to the database and commit
+        db.session.add(markdown_file)
+        db.session.commit()
+
+        return jsonify(status='success', message='Markdown file added successfully'), 200
+
+    except Exception as e:
+        return jsonify(status='error', message=str(e)), 500

@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block content %}
+<main id="main">
+   <div class="container">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+         <h1>Admin Dashboard</h1>
+         <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
+         <a href="{{ url_for('projects_admin') }}" class="btn btn-primary">Manage Projects</a>
+      </div>
+      <p>Welcome to the admin dashboard! Here you can manage your application.</p>
+      <!-- Submissions Table -->
+      <div class="container">
+         <h2>Contact Submissions</h2>
+         <table 
+            id="submissionsTable" 
+            data-toggle="table" 
+            data-url="{{ url_for('get_submissions') }}" 
+            data-pagination="true" 
+            data-search="true" 
+            data-show-refresh="true" 
+            data-show-toggle="true" 
+            data-toolbar="#toolbar"
+            >
+            <thead>
+               <tr>
+                  <th data-field="operate" data-formatter="operateFormatter" data-events="operateEvents" data-table-id="submissionsTable">Actions</th>
+                  <th data-field="id">Item ID</th>
+                  <th data-field="name">Item Name</th>
+                  <th data-field="email">Item Email</th>
+                  <th data-field="subject">Item Subject</th>
+                  <th data-field="message">Item Message</th>
+               </tr>
+            </thead>
+         </table>
+      </div>
+
+      <!-- Categories Table -->
+      <div class="container mt-5">
+          <h2>Categories</h2>
+          <table 
+              id="categoriesTable" 
+              data-toggle="table" 
+              data-url="/get_categories" 
+              data-pagination="true" 
+              data-search="true" 
+              data-show-refresh="true" 
+              data-show-toggle="true" 
+              data-toolbar="#categoriesToolbar">
+              <thead>
+                  <tr>
+                      <th data-field="operate" data-formatter="operateFormatter" data-events="operateEvents" data-table-id="categoriesTable">Actions</th>
+                      <th data-field="id">Category ID</th>
+                      <th data-field="category">Category</th>
+                      <th data-field="subcategory">Subcategory</th>
+                  </tr>
+              </thead>
+          </table>
+          <div id="categoriesToolbar">
+              <button id="addCategory" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#add-cat-modal">
+              Add Category
+              </button>
+          </div>
+      </div>
+   </div>
+
+
+
+   <!-- Modal Structure -->
+   <div class="modal fade" id="add-cat-modal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+       <div class="modal-dialog">
+           <div class="modal-content">
+               <div class="modal-header">
+                   <h5 class="modal-title" id="addCategoryModalLabel">Add New Category</h5>
+                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+               </div>
+               <div class="modal-body">
+                   <form id="addCategoryForm" onsubmit="event.preventDefault(); handleAdd('categoriesTable');">
+                       <div class="mb-3">
+                           <label for="categoryName" class="form-label">Category Name</label>
+                           <input type="text" class="form-control" id="categoryName" required>
+                       </div>
+                       <div class="mb-3">
+                           <label for="subcategoryName" class="form-label">Subcategory Name</label>
+                           <input type="text" class="form-control" id="subcategoryName" required>
+                       </div>
+                       <button type="submit" class="btn btn-primary" >Add Category</button>
+                   </form>
+               </div>
+               <div class="modal-footer">
+                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+               </div>
+           </div>
+       </div>
+   </div>
+
+   <!-- Modal for Editing -->
+   <div class="modal fade" tabindex="-1" id="editModal" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
+       <div class="modal-dialog">
+           <div class="modal-content">
+               <div class="modal-header">
+                   <h5 class="modal-title">Edit Data</h5>
+                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+               </div>
+               <div class="modal-body">
+                   <form id="editForm">
+                       <!-- Your input fields here -->
+                       <!-- Fields will be added dynamically by JS -->
+                       <button type="submit" class="btn btn-primary">Update</button>
+                   </form>
+               </div>
+               <div class="modal-footer">
+                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+               </div>
+           </div>
+       </div>
+   </div>
+
+
+</main>
+<!-- Bootstrap core JS-->
+<script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/bootstrap-table@1.22.1/dist/bootstrap-table.min.js"></script>
+<!-- Customer Admin JS --> 
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script> 
+{% endblock %}

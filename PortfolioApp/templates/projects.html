@@ -1,0 +1,36 @@
+<!-- contact.html -->
+{% extends "base.html" %}
+
+{% block title %}Prajwal Ram Gowda - Projects{% endblock %}
+
+{% block content %}
+
+<section id="about" class="about">
+  <div class="section-title">
+    <h1>About</h1>
+</div>
+</section>
+
+<main id="main">
+	<div class="container">
+		<div class="row row-cols-1 row-cols-md-3 g-4">
+		    {% for post in posts %}
+		    <div class="col">
+		        <div class="card">
+		            <img src="{{ url_for('static', filename='img/project_img.jpg') }}" class="card-img-top" alt="{{ post.name }}">
+		            <div class="card-body">
+		                <h5 class="card-title">{{ post.name }}</h5>
+		                <!-- <p class="card-text">{{ post.content | safe }}</p> -->
+		                <a href="/projects-detail/{{ post.id }}" class="btn btn-primary">Read More</a>
+		            </div>
+		        </div>
+		    </div>
+		    {% endfor %}
+		</div>
+	</div>
+</main>
+
+<section>
+	
+</section>
+{% endblock %}

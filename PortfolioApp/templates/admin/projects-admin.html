@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+   .grid-container {
+   display: grid;
+   grid-template-rows: 1fr auto;
+   min-height: 100vh;
+   }
+   #main {
+   grid-row: 1 / 2;
+   }
+</style>
+<main id="main">
+   <div class="container">
+      <h1>Projects Admin</h1>
+      <p>Manage your projects here.</p>
+      <!-- Add your project management components here. -->
+   </div>
+   <div class="grid-container">
+      <!-- Categories Table -->
+      <div class="container mt-5">
+         <h2>Posts</h2>
+         <table 
+            id="markdownFilesTable" 
+            data-toggle="table" 
+            data-url="{{ url_for('get_posts') }}" 
+            data-pagination="true" 
+            data-search="true" 
+            data-show-refresh="true" 
+            data-show-toggle="true" 
+            data-toolbar="#postsToolbar"
+            data-card-view="true">
+            <thead>
+               <tr>
+                  <th data-field="operate" data-formatter="operateFormatter" data-events="operateEvents" data-table-id="markdownFilesTable">Actions</th>
+                  <th data-field="id">Post ID</th>
+                  <th data-field="name">Title</th>
+                  <th data-field="category_id">Category ID</th>
+                  <th data-field="content">Content</th>
+                  <th data-field="upload_date">Upload Date</th>
+                  <th data-field="modification_date">Modification Date</th>
+                  <th data-field="author_name">Author Name</th>
+               </tr>
+            </thead>
+         </table>
+         <div id="postsToolbar">
+            <button id="addPost" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#add-md-modal">
+            Add Post
+            </button>
+         </div>
+      </div>
+   </div>
+   <!-- Modal for Adding Markdown File -->
+   <div class="modal fade" id="add-md-modal" tabindex="-1" aria-labelledby="addMdModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+         <div class="modal-content">
+            <div class="modal-header">
+               <h5 class="modal-title" id="addMdModalLabel">Add New Markdown File</h5>
+               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+               <form id="addMdForm" onsubmit="event.preventDefault(); handleAdd('markdownFilesTable');">
+                  <div class="mb-3">
+                     <label for="mdName" class="form-label">File Name</label>
+                     <input type="text" class="form-control" id="mdName" required>
+                  </div>
+                  <div class="mb-3">
+                     <label for="categoryDropdown" class="form-label">Category</label>
+                     <select class="form-control" id="categoryDropdown">
+                        <!-- Options will be populated from the backend -->
+                     </select>
+                  </div>
+                  <div class="mb-3">
+                     <label for="mdFile" class="form-label">Upload Markdown File</label>
+                     <input type="file" class="form-control" id="mdFile" accept=".md" required>
+                  </div>
+                  <div class="mb-3">
+                     <label for="authorName" class="form-label">Author Name</label>
+                     <input type="text" class="form-control" id="authorName" required>
+                  </div>
+                  <button type="submit" class="btn btn-primary">Add File</button>
+               </form>
+            </div>
+            <div class="modal-footer">
+               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+         </div>
+      </div>
+   </div>
+      <!-- Modal for Editing -->
+   <div class="modal fade" tabindex="-1" id="edit-md-modal" aria-labelledby="editMdModalLabel" aria-hidden="true">
+       <div class="modal-dialog">
+           <div class="modal-content">
+               <div class="modal-header">
+                   <h5 class="modal-title">Edit Data</h5>
+                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+               </div>
+               <div class="modal-body">
+                   <form id="editMdForm">
+                       <!-- Your input fields here -->
+                       <!-- Fields will be added dynamically by JS -->
+                   </form>
+               </div>
+               <div class="modal-footer">
+                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+               </div>
+           </div>
+       </div>
+   </div>
+
+</main>
+<!-- Bootstrap core JS-->
+<script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/bootstrap-table@1.22.1/dist/bootstrap-table.min.js"></script>
+<!-- Customer Admin JS --> 
+<script src="{{ url_for('static', filename='js/projects-admin.js') }}"></script> 
+{% endblock %}

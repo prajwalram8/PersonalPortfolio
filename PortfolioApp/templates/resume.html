@@ -1,0 +1,16 @@
+<!-- about.html -->
+{% extends "base.html" %}
+
+{% block title %}Prajwal Ram Gowda - About{% endblock %}
+
+{% block content %}
+<main id="main">
+  <div class="pdf-container">
+    <object data="{{ url_for('static', filename='pdf/Prajwal Ram Gowda.pdf') }}" type="application/pdf" class="pdf-object">
+      <embed src="{{ url_for('static', filename='pdf/Prajwal Ram Gowda.pdf') }}" class="pdf-embed">
+          <p>This browser does not support PDFs. Please download the PDF to view it: <a href="{{ url_for('static', filename='pdf/Prajwal Ram Gowda.pdf') }}">Download PDF</a>.</p>  
+      </embed>
+    </object>
+  </div>
+</main>
+{% endblock %}
