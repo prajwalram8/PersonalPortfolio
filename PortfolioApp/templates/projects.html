@@ -1,36 +1,54 @@
-<!-- contact.html -->
 {% extends "base.html" %}
 
 {% block title %}Prajwal Ram Gowda - Projects{% endblock %}
 
 {% block content %}
 
-<section id="about" class="about">
-  <div class="section-title">
-    <h1>About</h1>
-</div>
-</section>
-
 <main id="main">
-	<div class="container">
-		<div class="row row-cols-1 row-cols-md-3 g-4">
-		    {% for post in posts %}
-		    <div class="col">
-		        <div class="card">
-		            <img src="{{ url_for('static', filename='img/project_img.jpg') }}" class="card-img-top" alt="{{ post.name }}">
-		            <div class="card-body">
-		                <h5 class="card-title">{{ post.name }}</h5>
-		                <!-- <p class="card-text">{{ post.content | safe }}</p> -->
-		                <a href="/projects-detail/{{ post.id }}" class="btn btn-primary">Read More</a>
-		            </div>
-		        </div>
-		    </div>
-		    {% endfor %}
-		</div>
-	</div>
+  <section id="projects posts">
+      <div class="section-title">
+        <h2>Projects 🖋️</h2>
+      </div>
+
+      <!-- Category Filter Buttons -->
+        <div class="container">
+          <div class="row justify-content-center">
+            <!-- 'All' category button -->
+            <div class="col-auto mb-2">
+              <button type="button" class="btn btn-primary btn-custom-height" onclick="filterPosts('All')">All</button>
+            </div>
+            <!-- Category buttons -->
+            {% for category in categories %}
+            <div class="col-auto mb-2">
+              <button type="button" class="btn btn-primary btn-custom-height" onclick="filterPosts('{{ category.category }}')">{{ category.category }}</button>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+      <section id="project post container">
+        <div class="container">
+          <div class="row row-cols-1 row-cols-md-3 g-4" id="post-container">
+            {% for post in posts %}
+              <div class="col">
+                <div class="card h-100">
+                  <img src="{{ url_for('static', filename='img/project_img.jpg') }}" class="card-img-top" alt="{{ post.name }}">
+                  <div class="card-body">
+                    <h5 class="card-title">{{ post.name }}</h5>
+                    <a href="/projects-detail/{{ post.id }}" class="btn btn-primary">Read More</a>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+
+  </section>
 </main>
 
-<section>
-	
-</section>
+<script src="{{ url_for('static', filename='js/projects.js') }}"></script> 
+<!--script src="https://code.jquery.com/jquery-3.6.0.min.js"></script-->
+<script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
 {% endblock %}

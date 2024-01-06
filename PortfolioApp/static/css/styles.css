@@ -2774,7 +2774,7 @@ textarea.form-control-lg {
 }
 
 .btn {
-  --bs-btn-padding-x: 0.75rem;
+  --bs-btn-padding-x: 0.25rem;
   --bs-btn-padding-y: 0.25rem;
   --bs-btn-font-family: ;
   --bs-btn-font-size: 1rem;
@@ -11440,42 +11440,111 @@ section {
 /*--------------------------------------------------------------
 # Image Containers
 --------------------------------------------------------------*/
-.logo-container img {
-  width: 200px;
+/* Base styles for all logo images */
+.logo-img, .tech-logo-img, .af-business-img {
   height: auto;
-  margin-bottom: 10px;
+  margin: auto; /* Center the image */
+  display: block; /* Ensures the margin auto centers the image horizontally */
+}
+
+/* New base styles specifically for expertise icons */
+.expertise-icon {
+  max-width: 100%; /* Ensure the image is never wider than its container */
+  max-height: 65px; /* Same as the default for other logos */
+}
+
+/* Specific styles for logo containers */
+.logo-container img, .tech-logo img, .af-business-logo img {
   padding: 5px 15px;
+  margin-bottom: 10px;
+  width: auto;
+  max-height: 65px;
+  filter: grayscale(80%);
 }
 
-.tech-logo {
-  padding: 15px;
-  text-align: center;
+/* Responsive adjustments for expertise icons */
+@media (max-width: 768px) {
+  .expertise-icon {
+    max-height: 55px; /* Smaller icons for medium screens */
+  }
 }
 
-.tech-logo-img {
-  max-height: 50px; /* You can set this to the size you prefer */
-  margin: auto; /* Center the image if it's smaller than the grid */
-  filter: saturate(0.2); /* Reduces saturation to 50% */
+@media (max-width: 576px) {
+  .expertise-icon {
+    max-height: 45px; /* Even smaller icons for small screens */
+  }
+}
+
+/* If you have very small screens, you can add another breakpoint for expertise icons */
+@media (max-width: 400px) {
+  .expertise-icon {
+    max-height: 35px; /* Smaller icons for very small screens */
+  }
+}
+
+/* Keep the existing responsive adjustments for other logos */
+@media (max-width: 768px) {
+  .logo-container img, .tech-logo img, .af-business-logo img {
+    max-height: 55px;
+    padding: 5px;
+  }
+}
+
+@media (max-width: 576px) {
+  .logo-container img, .tech-logo img, .af-business-logo img {
+    max-height: 45px;
+    padding: 3px;
+  }
+}
+
+@media (max-width: 400px) {
+  .logo-container img, .tech-logo img, .af-business-logo img {
+    max-height: 35px;
+    padding: 2px;
+  }
 }
 
 .af-business-logo {
-  padding: 20px;
-  text-align: center;
+  text-align: center; /* Center the logos inside the columns */
+  padding: 10px; /* Add some padding to ensure logos don't touch each other */
 }
 
 .af-business-img {
-  max-height: 65px;
-  /* You can set this to the size you prefer */
-  margin: auto;
-  /* Center the image if it's smaller than the grid */
-  filter: saturate(0.7);
-  /* Reduces saturation to 50% */
+  max-width: 100%; /* Allows the image to scale up to the full width of the column */
+  height: auto; /* Maintains the aspect ratio */
+  max-height: 80px; /* Provides a minimum visibility size */
 }
 
-.logo-img {
-  max-height: 70px;
-  margin: auto;
+/* Adjustments for tablets */
+@media (max-width: 1024px) {
+  /* Assuming you want two logos per row on tablets */
+  .af-business-logo {
+    flex: 0 0 50%; /* Take up half of the row */
+    max-width: 50%; /* Take up half of the row */
+  }
 }
+
+@media (max-width: 768px) {
+  .af-business-logo {
+    /* On smaller tablets, you might want three logos per row */
+    flex: 0 0 33.333%; /* Take up one-third of the row */
+    max-width: 33.333%; /* Take up one-third of the row */
+  }
+}
+
+/* Further adjustments for very small screens, if needed */
+@media (max-width: 576px) {
+  .af-business-logo {
+    flex: 0 0 50%; /* Take up half of the row for small screens */
+    max-width: 50%; /* Take up half of the row for small screens */
+  }
+
+  .af-business-img {
+    max-height: 60px; /* Smaller max height for smaller screens */
+  }
+}
+
+
 
 /*--------------------------------------------------------------
 # PDF Containers
@@ -11502,10 +11571,51 @@ section {
   width: 150px;
   height: auto;
 }
+
+/*--------------------------------------------------------------
+# Coming Soon
+--------------------------------------------------------------*/
+
+#post-container {
+  display: flex;
+  flex-wrap: wrap;
+  min-height: 300px; /* Adjust the height as needed */
+  justify-content: center;
+  align-items: center;
+}
+
+.coming-soon-container {
+  flex: 0 0 100%; /* This ensures the container takes full width */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.coming-soon-message {
+  padding: 50px 0;
+}
+
+.coming-soon-message h2 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+}
+
+.coming-soon-message p {
+  font-size: 1rem;
+  color: #666;
+}
+
+
 /*--------------------------------------------------------------
 # Helpers
 --------------------------------------------------------------*/
+/* Custom class for shorter buttons */
+.btn-custom-height {
+  padding-top: 0.25rem;    /* Adjust the top padding to reduce height */
+  padding-bottom: 0.25rem; /* Adjust the bottom padding to reduce height */
+}
+
 /*
-{
+* {
   border: 1px solid red !important;
 }

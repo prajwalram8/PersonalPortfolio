@@ -18,20 +18,6 @@ def about():
 def resume():
     return render_template('resume.html', active_page = 'resume')
 
-@app.route('/projects')
-def projects():
-    posts = MarkdownFile.query.all()  # Fetching posts from the database
-    data = [{'id': post.id, 'name': post.name, 'category_id': post.category_id, 'content': post.content, 
-             'upload_date': post.upload_date, 'modification_date': post.modification_date, 
-             'author_name': post.author_name} for post in posts]
-    return render_template('projects.html', active_page = 'projects', posts=data)
-
-@app.route('/projects-detail/<int:id>', methods=['GET'])
-def projects_detail(id):
-    posts = MarkdownFile.query.get_or_404(id)
-    markdown_content = posts.content
-    return render_template('projects-detail.html', md_content = markdown_content)
-
 
 # ##################################################################################
 # Contact

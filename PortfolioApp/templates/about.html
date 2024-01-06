@@ -7,8 +7,8 @@
 <main id="main">
     <section id="about" class="about bg-light">
         <div class="container">
-            <div class="container text-center">
-                <h1>About</h1>
+            <div class="section-title">
+                <h2>About 👤</h2>
             </div>
             <div class="row align-items-center">
                 <!-- Added align-items-center to vertically align the entire row -->
@@ -65,10 +65,12 @@
                 <h4>Master of Business Administration - Finance </h4>
                 <div class="row justify-content-between spacing-before-after">
                     <div class="col-4">
-                        <img src="{{ url_for('static', filename='img/logo/SPJGlobal.png') }}" alt="SP Jain" class="img-fluid af-business-img">
+                        <div class="float-start">
+                            <img src="{{ url_for('static', filename='img/logo/SPJGlobal.png') }}" alt="SP Jain" class="img-fluid af-business-img">
+                        </div>
                     </div>
                     <div class="col-4">
-                        <h5>2021 - 2023</h5>
+                        <h4>2021 - 2023</h4>
                     </div>
                 </div>
                 <p class="mb-3">
@@ -83,10 +85,12 @@
                 <h4>Bachelor of Engineering - Industrial Engineering &amp; Management</h4>
                 <div class="row justify-content-between spacing-before-after">
                     <div class="col-4">
-                        <img src="{{ url_for('static', filename='img/logo/Ramaiah.png') }}" alt="Ramaiah" class="img-fluid af-business-img">
+                        <div class="float-start">
+                            <img src="{{ url_for('static', filename='img/logo/Ramaiah.png') }}" alt="Ramaiah" class="img-fluid af-business-img">
+                        </div>
                     </div>
                     <div class="col-4">
-                        <h5>2012 - 2017</h5>
+                        <h4>2012 - 2017</h4>
                     </div>
                 </div>
                 <p class="mb-3">
@@ -110,10 +114,12 @@
 
                     <div class="row justify-content-between mb-3">
                         <div class="col-6 col-md-4">
-                            <img src="{{ url_for('static', filename='img/logo/GAG New.png') }}" alt="Ghassan Aboud Group Logo" class="img-fluid af-business-img">
+                            <div class="float-start">
+                                <img src="{{ url_for('static', filename='img/logo/GAG New.png') }}" alt="Ghassan Aboud Group Logo" class="img-fluid af-business-img">
+                            </div>
                         </div>
                         <div class="col-6 col-md-4 text-md-right">
-                            <h5>2021 - 2023</h5>
+                            <h4>2021 - 2023</h4>
                         </div>
                     </div>
 
@@ -150,17 +156,19 @@
                         </div>
                         <div class="col-6 col-sm-4 col-md-1 af-business-logo">
                             <img src="https://gagroup.net/wp-content/uploads/2021/09/Gallega.svg" alt="BuyParts24" class="img-fluid af-business-img">
+                        </div>
                     </div>
-                </div>
             </div>
             <div class="resume-item bg-light">
                 <h4>Data Scientist</h4>
                 <div class="row justify-content-between spacing-before-after">
                     <div class="col-4">
-                        <img src="{{ url_for('static', filename='img/logo/DP World.png') }}" alt="DP World" class="img-fluid af-business-img">
+                        <div class="float-start">
+                            <img src="{{ url_for('static', filename='img/logo/DP World.png') }}" alt="DP World" class="img-fluid af-business-img">
+                        </div>
                     </div>
                     <div class="col-4">
-                        <h5>2020 - 2021</h5>
+                        <h4>2020 - 2021</h4>
                     </div>
                 </div>
                 <p class="mb-3">
@@ -171,10 +179,12 @@
                 <h4>Decision Scientist</h4>
                 <div class="row justify-content-between spacing-before-after">
                     <div class="col-4">
-                        <img src="{{ url_for('static', filename='img/logo/MuSigma.png') }}" alt="MuSigma" class="img-fluid af-business-img">
+                        <div class="float-start">
+                            <img src="{{ url_for('static', filename='img/logo/MuSigma.png') }}" alt="MuSigma" class="img-fluid af-business-img">
+                        </div>
                     </div>
                     <div class="col-4">
-                        <h5>2016 - 2020</h5>
+                        <h4>2016 - 2020</h4>
                     </div>
                 </div>
                 <p class="mb-3">
@@ -205,7 +215,7 @@
                         <div class="resume-item bg-light">
                             <div class="row flex-column flex-md-row">
                                 <div class="col-12 col-md-2 d-flex align-items-center order-1 order-md-1">
-                                    <img src="{{ url_for('static', filename='img/icons/data-visualization.png') }}" class="img-fluid logo-img mx-auto d-block" alt=""> 
+                                    <img src="{{ url_for('static', filename='img/icons/data-visualization.png') }}" class="img-fluid logo-img expertise-icon" alt=""> 
                                 </div>
                                 <div class="col-12 col-md-10 order-2 order-md-2">
                                     <h4>Business Intelligence &amp Analytics</h4>
@@ -218,7 +228,7 @@
                         <div class="resume-item bg-light">
                             <div class="row flex-column flex-md-row">
                                 <div class="col-12 col-md-2 d-flex align-items-center order-1 order-md-1">
-                                    <img src="{{ url_for('static', filename='img/icons/research.png') }}" class="img-fluid logo-img mx-auto d-block" alt=""> 
+                                    <img src="{{ url_for('static', filename='img/icons/research.png') }}" class="img-fluid logo-img expertise-icon" alt=""> 
                                 </div>
                                 <div class="col-12 col-md-10 order-2 order-md-2">
                                     <h4>Market Research</h4>
@@ -231,7 +241,7 @@
                         <div class="resume-item bg-light">
                             <div class="row flex-column flex-md-row">
                                 <div class="col-12 col-md-2 d-flex align-items-center order-1 order-md-1">
-                                    <img src="{{ url_for('static', filename='img/icons/deep-learning.png') }}" class="img-fluid logo-img mx-auto d-block" alt=""> 
+                                    <img src="{{ url_for('static', filename='img/icons/deep-learning.png') }}" class="img-fluid logo-img expertise-icon" alt=""> 
                                 </div>
                                 <div class="col-12 col-md-10 order-2 order-md-2">
                                     <h4>Data Science and Machine Learning:</h4>
@@ -246,7 +256,7 @@
                         <div class="resume-item bg-light">
                             <div class="row flex-column flex-md-row">
                                 <div class="col-12 col-md-2 d-flex align-items-center order-1 order-md-1">
-                                    <img src="{{ url_for('static', filename='img/icons/project-management.png') }}" class="img-fluid logo-img mx-auto d-block" alt=""> 
+                                    <img src="{{ url_for('static', filename='img/icons/project-management.png') }}" class="img-fluid logo-img expertise-icon" alt=""> 
                                 </div>
                                 <div class="col-12 col-md-10 order-2 order-md-2">
                                     <h4>Project and Team Management:</h4>
@@ -259,7 +269,7 @@
                         <div class="resume-item bg-light">
                             <div class="row flex-column flex-md-row">
                                 <div class="col-12 col-md-2 d-flex align-items-center order-1 order-md-1">
-                                    <img src="{{ url_for('static', filename='img/icons/target.png') }}" class="img-fluid logo-img mx-auto d-block" alt=""> 
+                                    <img src="{{ url_for('static', filename='img/icons/target.png') }}" class="img-fluid logo-img expertise-icon" alt=""> 
                                 </div>
                                 <div class="col-12 col-md-10 order-2 order-md-2">
                                     <h4>Strategy Consulting</h4>
@@ -272,7 +282,7 @@
                         <div class="resume-item bg-light">
                             <div class="row flex-column flex-md-row">
                                 <div class="col-12 col-md-2 d-flex align-items-center order-1 order-md-1">
-                                    <img src="{{ url_for('static', filename='img/icons/processing-time.png') }}" class="img-fluid logo-img mx-auto d-block" alt=""> 
+                                    <img src="{{ url_for('static', filename='img/icons/processing-time.png') }}" class="img-fluid logo-img expertise-icon" alt=""> 
                                 </div>
                                 <div class="col-12 col-md-10 order-2 order-md-2">
                                     <h4>Lorem Ipsum:</h4>
@@ -344,4 +354,6 @@
 </main>
 <!-- End #main -->
 <script src="{{ url_for('static', filename='js/calculateYears.js') }}"></script> 
+<script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
 {% endblock %}

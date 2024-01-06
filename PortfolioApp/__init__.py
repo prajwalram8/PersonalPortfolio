@@ -20,3 +20,4 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 from PortfolioApp import views
 from PortfolioApp import admin
 from PortfolioApp import project_admin
+from PortfolioApp import projects
