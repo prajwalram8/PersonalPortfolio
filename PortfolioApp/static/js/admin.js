@@ -218,7 +218,7 @@ function handleRemove(tableId, row) {
             }
         });
     } else if (tableId === 'categoriesTable') {
-        // Make AJAX call to delete_submission endpoint
+        // Make AJAX call to delete_category endpoint
         $.post(`/delete_category/${row.id}`, function (data) {
             if (data.status === 'success') {
                 $(`#${tableId}`).bootstrapTable('remove', {
@@ -227,6 +227,16 @@ function handleRemove(tableId, row) {
                 });
             }
         });
+    } else if (tableId === 'usersTable') {
+        // Make AJAX call to delete_user endpoint
+        $.post(`/delete_user/${row.id}`, function (data) {
+            if (data.status === 'success') {
+                $(`#${tableId}`).bootstrapTable('remove', {
+                    field: 'id',
+                    values: [row.id]
+                })
+            }
+        })
     }
 }
 

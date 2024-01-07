@@ -1,34 +1,74 @@
+<!-- admin page -->
 {% extends "base.html" %}
+
+{% block title %}Prajwal Ram Gowda - About{% endblock %} 
+
 {% block content %}
+
 <main id="main">
-   <div class="container">
-      <div class="d-flex justify-content-between align-items-center mb-4">
-         <h1>Admin Dashboard</h1>
-         <a href="{{ url_for('logout') }}" class="btn btn-danger">Logout</a>
-         <a href="{{ url_for('projects_admin') }}" class="btn btn-primary">Manage Projects</a>
-      </div>
-      <p>Welcome to the admin dashboard! Here you can manage your application.</p>
-      <!-- Submissions Table -->
-      <div class="container">
-         <h2>Contact Submissions</h2>
-         <table 
-            id="submissionsTable" 
-            data-toggle="table" 
-            data-url="{{ url_for('get_submissions') }}" 
-            data-pagination="true" 
-            data-search="true" 
-            data-show-refresh="true" 
-            data-show-toggle="true" 
-            data-toolbar="#toolbar"
+    <section id = "admin-page">
+        <div class = "section-title">
+            <h2> Admin 🚨</h2>
+        </div>
+
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+            <a href="{{ url_for('logout') }}" class="btn btn-danger btn-custom-height">Logout</a>
+            <a href="{{ url_for('projects_admin') }}" class="btn btn-primary btn-custom-height">Manage Projects</a>
+        </div>
+
+        <p>Welcome to the admin dashboard! Here you can manage your application.</p>
+        
+        <!-- Submissions Table -->
+        <div class="container">
+            <h2>Users</h2>
+            <table 
+                id="usersTable" 
+                data-toggle="table" 
+                data-url="{{ url_for('get_users') }}" 
+                data-pagination="true" 
+                data-search="true" 
+                data-show-refresh="true" 
+                data-show-toggle="true" 
+                data-toolbar="#usersToolbar"
             >
             <thead>
                <tr>
-                  <th data-field="operate" data-formatter="operateFormatter" data-events="operateEvents" data-table-id="submissionsTable">Actions</th>
-                  <th data-field="id">Item ID</th>
-                  <th data-field="name">Item Name</th>
-                  <th data-field="email">Item Email</th>
-                  <th data-field="subject">Item Subject</th>
-                  <th data-field="message">Item Message</th>
+                    <th data-field="operate" data-formatter="operateFormatter" data-events="operateEvents" data-table-id="submissionsTable">Actions</th>
+                    <th data-field="id">User ID</th>
+                    <th data-field="username">User Name</th>
+                    <th data-field="password">Password</th>
+               </tr>
+            </thead>
+            </table>
+            <div id="usersToolbar">
+                <button id="addUser" class="btn btn-success btn-custom-height" data-bs-toggle="modal">
+                Add Users
+                </button>
+            </div>
+        </div>
+
+        <!-- Submissions Table -->
+        <div class="container">
+            <h2>Contact Submissions</h2>
+            <table 
+                id="submissionsTable" 
+                data-toggle="table" 
+                data-url="{{ url_for('get_submissions') }}" 
+                data-pagination="true" 
+                data-search="true" 
+                data-show-refresh="true" 
+                data-show-toggle="true" 
+                data-toolbar="#submissionsToolbar"
+            >
+            <thead>
+               <tr>
+                    <th data-field="operate" data-formatter="operateFormatter" data-events="operateEvents" data-table-id="submissionsTable">Actions</th>
+                    <th data-field="id">Item ID</th>
+                    <th data-field="name">Item Name</th>
+                    <th data-field="email">Item Email</th>
+                    <th data-field="subject">Item Subject</th>
+                    <th data-field="message">Item Message</th>
                </tr>
             </thead>
          </table>
@@ -56,14 +96,11 @@
               </thead>
           </table>
           <div id="categoriesToolbar">
-              <button id="addCategory" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#add-cat-modal">
+              <button id="addCategory" class="btn btn-success btn-custom-height" data-bs-toggle="modal" data-bs-target="#add-cat-modal">
               Add Category
               </button>
           </div>
       </div>
-   </div>
-
-
 
    <!-- Modal Structure -->
    <div class="modal fade" id="add-cat-modal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
@@ -114,7 +151,6 @@
            </div>
        </div>
    </div>
-
 
 </main>
 <!-- Bootstrap core JS-->

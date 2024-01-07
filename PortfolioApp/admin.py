@@ -12,22 +12,28 @@ login_manager.login_view = 'login'
 
 
 # Simulated database: Replace with a real database
-users = []
-hashed_password = generate_password_hash('adminpassword', method='sha256')
-users.append(User(id=1, username='admin', password=hashed_password))
+# users = []
+# hashed_password = generate_password_hash('adminpassword', method='sha256')
+# users.append(User(id=1, username='admin', password=hashed_password))
+
+def safe_commit():
+    """Commits the current transaction or rolls back if any exception occurs."""
+    try:
+        db.session.commit()
+        return True
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f"Database error: {e}")
+        return False
 
 @login_manager.user_loader
 def load_user(user_id):
-    for user in users:
-        if user.id == int(user_id):
-            return user
-    return None
+    return User.query.get(user_id)
 
 @app.route('/admin')
 @login_required
 def admin():
     return render_template('admin/admin.html')
-
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -56,6 +62,16 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('index'))
+
+# -------------------------------------------------
+# Handling Users
+# -------------------------------------------------
+@app.route('/get_users', methods=['GET'])
+def get_users():
+    users = User.query.all()
+    data = [{'id': user.id, 'username': user.username} for user in users]
+    return jsonify(data)
+
 
 # -------------------------------------------------
 # Handling Submissions
@@ -115,15 +131,17 @@ def create_category():
     db.session.commit()
     return jsonify({'status': 'success'}), 200
 
-@app.route('/update_category/<int:id>', methods=['POST'])
+@app.route('/update_category/<string:id>', methods=['POST'])
 def update_category(id):
     category = Category.query.get_or_404(id)
     category.category = request.form.get('category')
     category.subcategory = request.form.get('subcategory')
-    db.session.commit()
-    return jsonify({'status': 'success'}), 200
+    if safe_commit():
+        return jsonify({'status': 'success'}), 200
+    else:
+        return jsonify({'status': 'error'}), 500
 
-@app.route('/delete_category/<int:id>', methods=['POST'])
+@app.route('/delete_category/<string:id>', methods=['POST'])
 def delete_category(id):
     category = Category.query.get_or_404(id)
     db.session.delete(category)
