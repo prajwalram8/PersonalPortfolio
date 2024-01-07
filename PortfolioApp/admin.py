@@ -10,12 +10,6 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-
-# Simulated database: Replace with a real database
-# users = []
-# hashed_password = generate_password_hash('adminpassword', method='sha256')
-# users.append(User(id=1, username='admin', password=hashed_password))
-
 def safe_commit():
     """Commits the current transaction or rolls back if any exception occurs."""
     try:
@@ -72,6 +66,15 @@ def get_users():
     data = [{'id': user.id, 'username': user.username} for user in users]
     return jsonify(data)
 
+@app.route('/delete_user/<string:id>', methods=['POST'])
+def delete_user(id):
+    user = User.query.get_or_404(id)
+    db.session.delete(user)
+    if safe_commit():
+        return jsonify({'status': 'success'}), 200
+    else:
+        return jsonify({'status': 'error'}), 500
+
 
 # -------------------------------------------------
 # Handling Submissions
@@ -99,8 +102,10 @@ def get_submissions():
 def delete_submission(id):
     submission = ContactSubmission.query.get_or_404(id)
     db.session.delete(submission)
-    db.session.commit()
-    return jsonify({'status': 'success'}), 200
+    if safe_commit():
+        return jsonify({'status': 'success'}), 200
+    else:
+        return jsonify({'status': 'error'}), 500
 
 @app.route('/update_submission/<int:id>', methods=['POST'])
 def update_submission(id):
@@ -109,8 +114,10 @@ def update_submission(id):
     submission.email = request.form.get('email')
     submission.subject = request.form.get('subject')
     submission.message = request.form.get('message')
-    db.session.commit()
-    return jsonify({'status': 'success'}), 200
+    if safe_commit():
+        return jsonify({'status': 'success'}), 200
+    else:
+        return jsonify({'status': 'error'}), 500
 
 
 # -------------------------------------------------
@@ -128,8 +135,10 @@ def create_category():
     subcategory = request.form.get('subcategory')
     new_category = Category(category=category, subcategory=subcategory)
     db.session.add(new_category)
-    db.session.commit()
-    return jsonify({'status': 'success'}), 200
+    if safe_commit():
+        return jsonify({'status': 'success'}), 200
+    else:
+        return jsonify({'status': 'error'}), 500
 
 @app.route('/update_category/<string:id>', methods=['POST'])
 def update_category(id):
@@ -145,8 +154,10 @@ def update_category(id):
 def delete_category(id):
     category = Category.query.get_or_404(id)
     db.session.delete(category)
-    db.session.commit()
-    return jsonify({'status': 'success'}), 200
+    if safe_commit():
+        return jsonify({'status': 'success'}), 200
+    else:
+        return jsonify({'status': 'error'}), 500
 
 
 
