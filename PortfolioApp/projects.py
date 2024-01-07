@@ -40,7 +40,7 @@ def filter_posts(category_name):
     return jsonify(posts=posts_json)
 
 
-@app.route('/projects-detail/<int:id>', methods=['GET'])
+@app.route('/projects-detail/<string:id>', methods=['GET'])
 def projects_detail(id):
     posts = MarkdownFile.query.get_or_404(id)
     markdown_content = posts.content

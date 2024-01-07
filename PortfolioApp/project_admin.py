@@ -55,27 +55,38 @@ def create_markdown_file():
     except Exception as e:
         return jsonify(status='error', message=str(e)), 500
 
-@app.route('/update_markdown_file/<int:id>', methods=['POST'])
+@app.route('/update_markdown_file/<string:id>', methods=['POST'])
 def update_markdown_file(id):
     markdownFile = MarkdownFile.query.get_or_404(id)
-    try:
+    print(markdownFile.name, markdownFile.category_id, markdownFile.content, markdownFile.author_name)
+    print('----------------------############----------------------------')
+    # try:
         # Extract data from the request
-        name = request.form.get('name')
-        category_id = request.form.get('category_id')
-        content = request.form.get('content')
-        author_name = request.form.get('author_name')
+    name = request.form.get('name')
+    category_id = request.form.get('category_id')
+    content = request.form.get('content')
+    author_name = request.form.get('author_name')
 
-        # Update a new MarkdownFile object
-        markdownFile.name = name
-        markdownFile.category_id = category_id
-        markdownFile.content = content
-        markdownFile.author_name = author_name
-        markdownFile.modification_date = datetime.now(timezone.utc),  # Setting the current date and time
+    # Update a new MarkdownFile object
+    markdownFile.name = name
+    markdownFile.category_id = category_id
+    markdownFile.content = content
+    markdownFile.author_name = author_name
+    markdownFile.modification_date = datetime.now(timezone.utc)  # Setting the current date and time
+    print(markdownFile.name, markdownFile.category_id, markdownFile.content, markdownFile.author_name)
 
-        # Add to the database and commit
-        db.session.commit()
+    # Add to the database and commit
+    db.session.commit()
 
-        return jsonify(status='success', message='Markdown file updated successfully'), 200
+    return jsonify(status='success', message='Markdown file updated successfully'), 200
 
-    except Exception as e:
-        return jsonify(status='error', message=str(e)), 500
+    # except Exception as e:
+    #     return jsonify(status='error', message=str(e)), 500
+
+
+@app.route('/delete_markdown_file/<string:id>', methods=['POST'])
+def delete_markdown_file(id):
+    markdownFile = MarkdownFile.query.get_or_404(id)
+    db.session.delete(markdownFile)
+    db.session.commit()
+    return jsonify({'status': 'success'}), 200

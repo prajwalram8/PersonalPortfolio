@@ -119,6 +119,20 @@ function handleEdit(tableId, id, row) {
     }
 }
 
+function handleRemove(tableId, row) {
+    if (tableId === 'markdownFilesTable') {
+        // Make AJAX call to delete_submission endpoint
+        $.post(`/delete_markdown_file/${row.id}`, function (data) {
+            if (data.status === 'success') {
+                $(`#${tableId}`).bootstrapTable('remove', {
+                    field: 'id',
+                    values: [row.id]
+                });
+            }
+        });
+    }
+}
+
 function populateModal(tableId, rowData) {
     const form = document.getElementById('editMdForm');
     form.innerHTML = ''; // Clear the form
