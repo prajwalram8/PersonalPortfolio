@@ -3,7 +3,7 @@ from flask_login import LoginManager, login_user, logout_user, login_required
 from werkzeug.security import check_password_hash, generate_password_hash
 from . import app,db
 from .models import User,ContactSubmission,Category,MarkdownFile
-
+from html import escape
 
 # Initialize Flask-Login
 login_manager = LoginManager()
@@ -89,10 +89,10 @@ def get_submissions():
     for submission in submissions:
         data.append({
             'id': submission.id,
-            'name': submission.name,
-            'email': submission.email,
-            'subject': submission.subject,
-            'message': submission.message
+            'name': escape(submission.name),
+            'email': escape(submission.email),
+            'subject': escape(submission.subject),
+            'message': escape(submission.message)
         })
     
     # Return data in the expected format
