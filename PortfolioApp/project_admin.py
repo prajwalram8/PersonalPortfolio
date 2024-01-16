@@ -3,6 +3,7 @@ from . import app,db
 from .models import MarkdownFile, Category
 from .admin import login_required
 from datetime import datetime, timezone
+import html
 
 @app.route('/admin/projects-admin')
 @login_required

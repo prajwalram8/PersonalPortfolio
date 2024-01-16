@@ -1,10 +1,11 @@
+import html
 from . import app, db
 from .models import ContactSubmission, MarkdownFile, Category
 from flask import render_template, request, redirect, url_for, flash, jsonify
 
 
-@app.route('/projects')
-def projects():
+@app.route('/blog')
+def blog():
     categories = Category.query.all()  # Fetching all categories for the filter
     posts = MarkdownFile.query.all()  # Fetching all posts from the database
     return render_template('projects.html', active_page='projects', posts=posts, categories=categories)
@@ -40,7 +41,7 @@ def filter_posts(category_name):
     return jsonify(posts=posts_json)
 
 
-@app.route('/projects-detail/<string:id>', methods=['GET'])
+@app.route('/blog-post/<string:id>', methods=['GET'])
 def projects_detail(id):
     posts = MarkdownFile.query.get_or_404(id)
     markdown_content = posts.content

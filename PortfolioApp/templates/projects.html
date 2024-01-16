@@ -32,10 +32,10 @@
             {% for post in posts %}
               <div class="col">
                 <div class="card h-100">
-                  <img src="{{ url_for('static', filename='img/project_img.jpg') }}" class="card-img-top" alt="{{ post.name }}">
+		<img src="{{ url_for('static', filename='img/project_img.jpg') }}" class="card-img-top" alt="{{ post.name }}">
                   <div class="card-body">
                     <h5 class="card-title">{{ post.name }}</h5>
-                    <a href="/projects-detail/{{ post.id }}" class="btn btn-secondary btn-custom-height">Read More</a>
+                    <a href="/blog-post/{{ post.id }}" class="btn btn-secondary btn-custom-height">Read More</a>
                   </div>
                 </div>
               </div>

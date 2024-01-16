@@ -11627,6 +11627,17 @@ grid-row: 1 / 2;
   padding-bottom: 0.25rem; /* Adjust the bottom padding to reduce height */
 }
 
+/*--------------------------------------------------------------
+# Helpers
+--------------------------------------------------------------*/
+.card-title {
+  width: 100%; /* Adjust as per your card's width */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
 /*
 * {
   border: 1px solid red !important;
