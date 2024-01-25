@@ -11630,15 +11630,3 @@ grid-row: 1 / 2;
 /*--------------------------------------------------------------
 # Helpers
 --------------------------------------------------------------*/
-.card-title {
-  width: 100%; /* Adjust as per your card's width */
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-
-/*
-* {
-  border: 1px solid red !important;
-}
