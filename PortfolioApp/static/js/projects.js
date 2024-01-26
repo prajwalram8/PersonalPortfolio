@@ -22,10 +22,10 @@ function filterPosts(category) {
         data.posts.forEach(post => {
           var postHtml = `
             <div class="col">
-              <div class="card h-100">
+              <div class="card h-100 d-flex flex-column">
                 <img src="https://prajwalramgowda.blr1.cdn.digitaloceanspaces.com/project_img.jpg" class="card-img-top" alt="${post.name}">
-                <div class="card-body">
-                  <h5 class="card-title">${post.name}</h5>
+                <div class="card-body d-flex flex-column">
+                  <h5 class="card-title card-content-title">${post.name}</h5>
                   <a href="/blog-post/${post.id}" class="btn btn-secondary btn-custom-height">Read Post</a>
                 </div>
               </div>
