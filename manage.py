@@ -76,6 +76,6 @@ if __name__ == '__main__':
         else:
             logging.error("Username and password are required to create a new user.")
     elif args.run:
-        app.run(host='0.0.0.0')
+        app.run(host='127.0.0.1', port=5000, debug=True)
     else:
         logging.warning("No operation specified. Use --help for available options.")
