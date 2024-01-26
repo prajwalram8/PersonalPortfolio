@@ -163,4 +163,4 @@ cython_debug/
 sqlite3.db
 
 # Manage.py
-/manage.py
+manage.py
