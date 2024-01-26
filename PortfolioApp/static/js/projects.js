@@ -23,10 +23,10 @@ function filterPosts(category) {
           var postHtml = `
             <div class="col">
               <div class="card h-100">
-                <img src="${post.image_url}" class="card-img-top" alt="${post.name}">
+                <img src="https://prajwalramgowda.blr1.cdn.digitaloceanspaces.com/project_img.jpg" class="card-img-top" alt="${post.name}">
                 <div class="card-body">
                   <h5 class="card-title">${post.name}</h5>
-                  <a href="/projects-detail/${post.id}" class="btn btn-primary">Read More</a>
+                  <a href="/blog-post/${post.id}" class="btn btn-secondary btn-custom-height">Read Post</a>
                 </div>
               </div>
             </div>
