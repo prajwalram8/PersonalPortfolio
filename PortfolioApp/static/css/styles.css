@@ -11630,3 +11630,15 @@ grid-row: 1 / 2;
 /*--------------------------------------------------------------
 # Helpers
 --------------------------------------------------------------*/
+.card-content-title {
+  min-height: 7rem; /* Adjust this value based on your content */
+}
+
+.card-content-text {
+  min-height: 5em; /* Adjust this value based on your content */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* Number of lines you want to display */
+  -webkit-box-orient: vertical;
+}
