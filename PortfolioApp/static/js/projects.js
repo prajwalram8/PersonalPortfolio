@@ -26,7 +26,11 @@ function filterPosts(category) {
                 <img src="https://prajwalramgowda.blr1.cdn.digitaloceanspaces.com/project_img.jpg" class="card-img-top" alt="${post.name}">
                 <div class="card-body d-flex flex-column">
                   <h5 class="card-title card-content-title">${post.name}</h5>
+                  <p class="card-text card-content-text"><small class="text-muted">${post.category_name}</small></p>
                   <a href="/blog-post/${post.id}" class="btn btn-secondary btn-custom-height">Read Post</a>
+                </div>
+                <div class="card-footer text-muted">
+                  ${post.upload_date}
                 </div>
               </div>
             </div>

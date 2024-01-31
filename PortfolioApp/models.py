@@ -1,6 +1,8 @@
 from . import db  # Import the db instance from the __init__.py
 from flask_login import UserMixin
 import uuid
+from sqlalchemy.orm import relationship
+
 
 def generate_uuid():
     return str(uuid.uuid4())
@@ -30,6 +32,7 @@ class MarkdownFile(db.Model):
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     name = db.Column(db.String(80))
     category_id = db.Column(db.String(36), db.ForeignKey('category.id'))
+    category = relationship("Category", backref="markdown_files")  # Define the relationship
     content = db.Column(db.Text)
     upload_date = db.Column(db.DateTime)
     modification_date = db.Column(db.DateTime)
