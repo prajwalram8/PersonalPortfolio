@@ -1,14 +1,26 @@
-import html
-from . import app, db
-from .models import ContactSubmission, MarkdownFile, Category
-from flask import render_template, request, redirect, url_for, flash, jsonify
+from . import app
+from .models import  MarkdownFile, Category
+from flask import render_template, url_for, jsonify
 
 
 @app.route('/blog')
 def blog():
     categories = Category.query.all()  # Fetching all categories for the filter
     posts = MarkdownFile.query.all()  # Fetching all posts from the database
-    return render_template('projects.html', active_page='projects', posts=posts, categories=categories)
+    posts_json = [
+        {
+            'id': post.id,
+            'name': post.name,
+            'image_url': url_for('static', filename='img/project_img.jpg'),  # Assuming a default image
+            'content': post.content,
+            'category_name': post.category.category+' - '+post.category.subcategory,
+            'upload_date': post.upload_date.strftime("%d %B, %Y") if post.upload_date else None,
+            'modification_date': post.modification_date.strftime("%d %B, %Y") if post.modification_date else None,
+            'author_name': post.author_name
+        }
+        for post in posts
+    ]
+    return render_template('projects.html', active_page='projects', posts=posts_json, categories=categories)
 
 @app.route('/filter-posts/<category_name>')
 def filter_posts(category_name):
@@ -31,8 +43,9 @@ def filter_posts(category_name):
             'name': post.name,
             'image_url': url_for('static', filename='img/project_img.jpg'),  # Assuming a default image
             'content': post.content,
-            'upload_date': post.upload_date.isoformat() if post.upload_date else None,
-            'modification_date': post.modification_date.isoformat() if post.modification_date else None,
+            'category_name': post.category.category+' - '+post.category.subcategory,
+            'upload_date': post.upload_date.strftime("%d %B, %Y") if post.upload_date else None,
+            'modification_date': post.modification_date.strftime("%d %B, %Y") if post.modification_date else None,
             'author_name': post.author_name
         }
         for post in filtered_posts

@@ -1,21 +1,9 @@
 import os
-
-def print_directory_structure(start_path, indent=0):
-    # Print current directory
-    print("  " * indent + f'[{start_path}]')
-
-    # List all files and subdirectories in the current directory
-    for item in os.listdir(start_path):
-        item_path = os.path.join(start_path, item)
-
-        # If it's a directory, recurse into it
-        if os.path.isdir(item_path):
-            print_directory_structure(item_path, indent + 1)
-        else:
-            print("  " * (indent + 1) + item)
-
-
-if __name__ == "__main__":
-    # Example usage
-    print_directory_structure('.')
-    
+extensions = ('.txt', '.py', '.db', '.css', '.js', '.html', '.ini', '.md')                                    #extinctions want to search
+exclude_directories = set(['venv'])    #directory (only names) want to exclude
+for dname, dirs, files in os.walk('.'):  #this loop though directies recursively 
+    dirs[:] = [d for d in dirs if d not in exclude_directories] # exclude directory if in exclude list 
+    for fname in files:
+        if(fname.lower().endswith(extensions)): #check for extension 
+           fpath = os.path.join(dname, fname)   #this generate full directory path for file
+           print(fpath)
