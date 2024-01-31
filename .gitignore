@@ -161,7 +161,7 @@ cython_debug/
 #.idea/
 
 # # SQLite
-# sqlite3.db
+sqlite3.db
 
 # # Manage.py
 # manage.py
