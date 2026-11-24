@@ -3,12 +3,18 @@ from pathlib import Path
 import re
 from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
 from sqlalchemy import text
+from werkzeug.datastructures import MultiDict
 from werkzeug.security import generate_password_hash
 
 from PortfolioApp import create_app, db
-from PortfolioApp.models import Category, ContactSubmission, MarkdownFile, User, utc_now
+from PortfolioApp.models import Category, ContactSubmission, MarkdownFile, ResumeDocument, SiteProfile, User, utc_now
+from PortfolioApp.profile import DEFAULT_PROFILE
+from PortfolioApp.studio import PROFILE_FIELDS, RESUME_SECTIONS
+
+BUNDLED_RESUME = Path(__file__).resolve().parents[1] / "PortfolioApp/static/pdf/Prajwal Ram Gowda.pdf"
 
 
 class PortfolioTests(unittest.TestCase):
@@ -41,7 +47,7 @@ class PortfolioTests(unittest.TestCase):
         self.assertTrue(response.location.endswith("/admin"))
 
     def test_admin_pages_and_actions_require_authentication(self):
-        for path in ("/admin", "/admin/inbox", "/admin/posts/new", "/admin/topics"):
+        for path in ("/admin", "/admin/inbox", "/admin/posts/new", "/admin/topics", "/admin/profile", "/admin/resume"):
             with self.subTest(path=path):
                 response = self.client.get(path)
                 self.assertEqual(response.status_code, 302)
@@ -58,7 +64,7 @@ class PortfolioTests(unittest.TestCase):
         self.sign_in()
         path = "/admin/posts/new"
         token = self.csrf_token(path)
-        source = "    indented code\n\n## Example section\n\n<div>Raw markup</div>\n\n$x^2$\n"
+        source = "    indented code\n\n## Example section\n\n| Metric |\n| ---: |\n| 1 |\n\n<div>Raw markup</div>\n\n$x^2$\n"
         response = self.client.post(path, data={
             "csrf_token": token, "action": "import", "markdown": (io.BytesIO(source.encode()), "notes.md"),
         })
@@ -86,6 +92,8 @@ class PortfolioTests(unittest.TestCase):
         self.assertIn(b"<h2>Example section</h2>", public.data)
         self.assertIn(b"<pre><code>indented code", public.data)
         self.assertIn(b"&lt;div&gt;Raw markup&lt;/div&gt;", public.data)
+        self.assertIn(b'<td class="align-right">1</td>', public.data)
+        self.assertNotIn(b'style="text-align', public.data)
         self.assertIn(b"<math ", public.data)
 
         post_id = edit_path.split("/")[-2]
@@ -135,6 +143,183 @@ class PortfolioTests(unittest.TestCase):
         self.assertTrue(response.location.endswith("/contact"))
         with self.app.app_context():
             self.assertEqual(db.session.scalar(db.select(ContactSubmission)).message, form["message"])
+
+
+    def test_profile_and_resume_share_content_and_reject_stale_edits(self):
+        self.sign_in()
+        profile_path = "/admin/profile"
+        profile = {field.name: DEFAULT_PROFILE[field.name] for field in PROFILE_FIELDS}
+        profile.update(headline="New portfolio headline", about_text="First paragraph.\n\nSecond paragraph.")
+        token = self.csrf_token(profile_path)
+        form = {**profile, "revision": "0", "csrf_token": token}
+        self.assertEqual(self.client.post(profile_path, data=form).status_code, 303)
+        self.assertEqual(self.client.post(profile_path, data=form).status_code, 409)
+        self.assertIn(b"New portfolio headline", self.client.get("/").data)
+        self.assertIn(b"<p>Second paragraph.</p>", self.client.get("/about").data)
+
+        content = {section[0]: [entry.copy() for entry in DEFAULT_PROFILE[section[0]]] for section in RESUME_SECTIONS}
+        first = content["work"][0]
+        first.update(company="Revised Company", title="A new case study")
+        new = {**first, "slug": "", "company": "Another Company", "role": "Engineer", "featured": "no"}
+        content["work"] = [new, first]
+        content["publications"] = [{"title": "A new publication", "url": "ftp://example.com/paper"}]
+
+        def resume_form():
+            data = MultiDict({"resume_headline": "Editing test", "revision": "1", "csrf_token": token})
+            for name, _, _, fields in RESUME_SECTIONS:
+                data.add("resume-section", name)
+                keys = [field.name for field in fields] + (["slug"] if name == "work" else [])
+                for row in content[name]:
+                    for key in keys:
+                        data.add(f"{name}-{key}", row[key])
+            return data
+
+        invalid = self.client.post("/admin/resume", data=resume_form())
+        self.assertEqual(invalid.status_code, 422)
+        self.assertIn(b"must be an http or https URL", invalid.data)
+        content["publications"][0]["url"] = "https://example.com/paper"
+        self.assertEqual(self.client.post("/admin/resume", data=resume_form()).status_code, 303)
+
+        home = self.client.get("/").data
+        self.assertIn(b"New portfolio headline", home)
+        self.assertIn(b"A new case study", home)
+        self.assertNotIn(b"Another Company", home)
+        resume = self.client.get("/resume").data
+        self.assertIn(b'id="business-intelligence"', resume)
+        self.assertIn(b'id="another-company"', resume)
+        self.assertLess(resume.index(b"Another Company"), resume.index(b"Revised Company"))
+        self.assertIn(b"https://example.com/paper", resume)
+
+    def test_pdf_replacement_is_authenticated_and_size_limited(self):
+        self.app.config["MAX_CONTENT_LENGTH"] = 128 * 1024
+        original = self.client.get("/resume.pdf")
+        self.assertIn("attachment", original.headers["Content-Disposition"])
+        self.assertEqual(original.mimetype, "application/pdf")
+        bundled = original.get_data()
+        original.close()
+
+        path = "/admin/resume/pdf"
+        token = self.csrf_token("/contact")
+        self.assertEqual(self.client.post(path, data={"csrf_token": token}).status_code, 302)
+        self.sign_in()
+        self.assertEqual(self.client.post(path, data={"pdf": (io.BytesIO(b"plain text"), "sample.pdf")}).status_code, 400)
+        token = self.csrf_token("/admin/resume")
+        response = self.client.post(path, data={
+            "csrf_token": token, "pdf": (io.BytesIO(b"plain text"), "sample.pdf"),
+        }, follow_redirects=True)
+        self.assertIn(b"Choose a valid PDF file", response.data)
+        self.assertGreater(len(bundled), self.app.config["MAX_CONTENT_LENGTH"])
+        revised = bundled + b"\n"
+        response = self.client.post(path, data={"csrf_token": token, "pdf": (io.BytesIO(revised), "resume.pdf")})
+        self.assertEqual(response.status_code, 303)
+        self.assertEqual(self.client.get("/resume.pdf").data, revised)
+        oversized = b"x" * (4 * 1024 * 1024 + 128 * 1024)
+        with io.BytesIO(oversized) as stream:
+            oversized_request = self.client.post(
+                path, input_stream=stream, content_type="multipart/form-data; boundary=test",
+            )
+        self.assertEqual(oversized_request.status_code, 413)
+        self.assertEqual(self.client.post(path, data={"csrf_token": token, "action": "reset"}).status_code, 303)
+        response = self.client.get("/resume.pdf")
+        self.assertEqual(response.get_data(), bundled)
+        response.close()
+
+    def test_rate_and_security_headers(self):
+        self.app.config["RATE_LIMITS"] = {"login": (2, 60), "contact": (1, 120)}
+        login_token = self.csrf_token("/admin/login")
+        invalid = {"csrf_token": login_token, "username": "owner", "password": "a wrong value"}
+        with patch("PortfolioApp.security.time", return_value=1000):
+            self.assertEqual(self.client.post("/login", data=invalid).status_code, 200)
+            self.assertEqual(self.client.post("/admin/login", data=invalid).status_code, 200)
+            blocked = self.client.post("/admin/login", data=invalid, headers={"X-Forwarded-For": "192.0.2.12"})
+            self.assertEqual(blocked.status_code, 429)
+            self.assertEqual(blocked.headers["Retry-After"], "60")
+            self.assertEqual(blocked.headers["Cache-Control"], "no-store")
+
+            contact = {"csrf_token": self.csrf_token("/contact"), "name": "A reader",
+                       "email": "reader@example.invalid", "subject": "Hello", "message": "Test."}
+            self.assertEqual(self.client.post("/contact", data=contact).status_code, 303)
+            self.assertEqual(self.client.post("/submit_contact", data=contact).status_code, 429)
+        with patch("PortfolioApp.security.time", return_value=1060):
+            self.assertEqual(self.client.post("/admin/login", data=invalid).status_code, 200)
+        headers = self.client.get("/contact").headers
+        self.assertIn("frame-ancestors 'none'", headers["Content-Security-Policy"])
+        self.assertEqual(headers["X-Content-Type-Options"], "nosniff")
+        self.assertNotIn("Strict-Transport-Security", headers)
+
+    def test_https_through_trusted_proxy_and_host_validation(self):
+        app = create_app({
+            "TESTING": True, "TRUSTED_HOSTS": ["portfolio.example"], "TRUST_PROXY": True,
+            "SESSION_COOKIE_SECURE": True, "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+        })
+        with app.app_context():
+            db.create_all()
+        client = app.test_client()
+        direct = client.get("/contact", base_url="http://portfolio.example")
+        self.assertNotIn("Strict-Transport-Security", direct.headers)
+        via_proxy = client.get(
+            "/contact", base_url="http://portfolio.example", headers={"X-Forwarded-Proto": "https"},
+        )
+        self.assertEqual(via_proxy.headers["Strict-Transport-Security"], "max-age=31536000")
+        self.assertEqual(client.get("/contact", base_url="http://unused.example").status_code, 400)
+        token = re.search(r'name="csrf_token" value="([^"]+)"', via_proxy.get_data(as_text=True)).group(1)
+        response = client.post(
+            "/contact", base_url="http://portfolio.example",
+            headers={"X-Forwarded-Proto": "https", "Referer": "https://portfolio.example/contact"},
+            data={"csrf_token": token, "name": "A reader", "email": "reader@example.invalid",
+                  "subject": "Hello", "message": "Submitted through HTTPS."},
+        )
+        self.assertEqual(response.status_code, 303)
+
+
+class BackupTests(unittest.TestCase):
+    def test_backup_and_restore_preserve_content(self):
+        with TemporaryDirectory() as directory:
+            live = Path(directory, "live.sqlite")
+            backup = Path(directory, "backup.sqlite")
+            restored = Path(directory, "restored.sqlite")
+            app = create_app({"TESTING": True, "SQLALCHEMY_DATABASE_URI": f"sqlite:///{live}"})
+            with app.app_context():
+                db.create_all()
+                db.session.add(SiteProfile(id=1, revision=1, content={
+                    **DEFAULT_PROFILE, "resume_headline": "Restored résumé",
+                }))
+                db.session.add(ResumeDocument(id=1, payload=BUNDLED_RESUME.read_bytes()))
+                db.session.add(ContactSubmission(message="Keep this inbox message."))
+                db.session.commit()
+
+            runner = app.test_cli_runner()
+            result = runner.invoke(args=["backup-db", str(backup)])
+            self.assertEqual(result.exit_code, 0, result.output)
+            self.assertEqual(backup.stat().st_mode & 0o777, 0o600)
+            self.assertNotEqual(runner.invoke(args=["backup-db", str(backup)]).exit_code, 0)
+            self.assertNotEqual(runner.invoke(args=["restore-db", str(backup), str(live)]).exit_code, 0)
+            result = runner.invoke(args=["restore-db", str(backup), str(restored)])
+            self.assertEqual(result.exit_code, 0, result.output)
+
+            restored_app = create_app({"TESTING": True, "SQLALCHEMY_DATABASE_URI": f"sqlite:///{restored}"})
+            client = restored_app.test_client()
+            self.assertIn("Restored résumé", client.get("/resume").get_data(as_text=True))
+            self.assertEqual(client.get("/resume.pdf").data, BUNDLED_RESUME.read_bytes())
+            with restored_app.app_context():
+                self.assertEqual(db.session.scalar(db.select(ContactSubmission)).message, "Keep this inbox message.")
+
+    def test_workers_share_rate_limit_budget(self):
+        with TemporaryDirectory() as directory:
+            path = Path(directory, "shared.sqlite")
+            config = {
+                "SQLALCHEMY_DATABASE_URI": f"sqlite:///{path}",
+                "RATE_LIMITS": {"login": (1, 60), "contact": (1, 60)},
+                "SECRET_KEY": "test-key-for-both-workers", "TESTING": True, "WTF_CSRF_ENABLED": False,
+            }
+            first = create_app(config)
+            second = create_app(config)
+            with first.app_context():
+                db.create_all()
+
+            with patch("PortfolioApp.security.time", return_value=1000):
+                self.assertEqual(first.test_client().post("/admin/login").status_code, 200)
+                self.assertEqual(second.test_client().post("/admin/login").status_code, 429)
 
 
 class MigrationTests(unittest.TestCase):

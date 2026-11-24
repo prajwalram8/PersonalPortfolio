@@ -8,6 +8,8 @@
         <a href="{{ url_for('admin.dashboard') }}">Posts</a>
         <a href="{{ url_for('admin.topics') }}">Topics</a>
         <a href="{{ url_for('admin.inbox') }}">Inbox</a>
+        <a href="{{ url_for('admin.profile') }}"{% if request.endpoint == 'admin.profile' %} aria-current="page"{% endif %}>Profile</a>
+        <a href="{{ url_for('admin.resume') }}"{% if request.endpoint == 'admin.resume' %} aria-current="page"{% endif %}>Résumé</a>
         <form action="{{ url_for('admin.logout') }}" method="post">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button class="plain-button" type="submit">Sign out</button>

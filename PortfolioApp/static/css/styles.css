@@ -513,6 +513,8 @@ h1 em, h2 em { color: var(--accent); }
 .prose table { display: block; margin-bottom: 1.25em; border-collapse: collapse; }
 .prose th, .prose td { padding: .4em .7em; border: 1px solid var(--line); text-align: left; }
 .prose th { background: var(--tint); }
+.prose .align-center { text-align: center; }
+.prose .align-right { text-align: right; }
 .prose code { font: .85em/1.65 var(--mono); }
 .prose :not(pre) > code { padding: .1em .3em; border-radius: 3px; background: var(--tint); }
 .prose pre { margin: 0 0 1.2em; padding: 16px 20px; border-radius: 4px; background: var(--code-bg); color: var(--code-ink); }
@@ -805,4 +807,36 @@ details form { margin-top: 9px; }
 @media (max-width: 690px) {
   .theme-toggle:not([hidden]) { margin-left: auto; }
   .cargo-journey { width: 38%; }
+}
+
+.studio-nav a[aria-current="page"] { color: var(--accent); text-decoration: underline; }
+.editor-label { display: block; margin-bottom: .35rem; }
+.notice ul { margin: .55rem 0 0; }
+.resume-editor-section, .resume-editor-entries { display: grid; width: 100%; gap: 14px; }
+.resume-editor-section > h2, .resume-pdf-panel > h2 { font-size: clamp(34px, 5vw, 48px); }
+.resume-editor-section > button { justify-self: start; }
+.resume-edit-entry { border: 1px solid var(--line); border-radius: 4px; background: var(--paper); }
+.resume-edit-entry > summary { padding: .85rem 1rem; color: var(--ink); }
+.resume-edit-entry[open] > summary { border-bottom: 1px solid var(--line); }
+.resume-edit-fields { padding: 1rem; }
+.resume-edit-fields h3 { margin-top: .5rem; font-size: 32px; }
+.resume-entry-actions { margin-top: 0; }
+.resume-entry-actions [hidden], .resume-editor-section > [hidden] { display: none; }
+.resume-editor button:disabled { opacity: .6; cursor: default; }
+.resume-description, .resume-outcome { white-space: pre-line; }
+.resume-pdf-panel { margin-top: 1.5rem; }
+.resume-pdf-panel form { width: 100%; }
+
+@media print {
+  :root:has(.resume-page) { color-scheme: light; }
+  .resume-page { background: #fff; color: #000; font-size: 10pt; }
+  .resume-page :is(.site-header, .site-footer, .skip-link, .resume-heading .button) { display: none; }
+  .resume-page .shell { width: 100%; padding: 0; }
+  .resume-page .resume-heading { display: block; margin-bottom: 1.2rem; }
+  .resume-page .resume-heading h1 { font-size: 34pt; }
+  .resume-page .resume-section { display: block; padding: .85rem 0; }
+  .resume-page .resume-section h2 { font-size: 22pt; margin-bottom: .75rem; break-after: avoid; }
+  .resume-page .resume-entries h3 { font-size: 15pt; }
+  .resume-page .resume-entries { gap: .65rem; }
+  .resume-page .resume-entries article { break-inside: avoid; }
 }

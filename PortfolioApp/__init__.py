@@ -19,6 +19,9 @@ def create_app(config_overrides=None):
     if config_overrides:
         app.config.update(config_overrides)
 
+    from .security import configure_security
+
+    configure_security(app)
     db.init_app(app)
     migrate.init_app(app, db)
     csrf.init_app(app)
@@ -26,6 +29,8 @@ def create_app(config_overrides=None):
     login_manager.login_view = "admin.login"
 
     from .admin import admin, create_owner
+    from . import studio  # Registers the profile and résumé routes on the admin blueprint.
+    from .database import backup_db, restore_db
     from .projects import writing
     from .views import pages
 
@@ -34,11 +39,8 @@ def create_app(config_overrides=None):
     app.register_blueprint(admin)
     app.cli.add_command(create_owner)
 
-    @app.after_request
-    def protect_private_responses(response):
-        if request.blueprint == "admin":
-            response.headers["Cache-Control"] = "no-store"
-        return response
+    app.cli.add_command(backup_db)
+    app.cli.add_command(restore_db)
 
     @app.errorhandler(CSRFError)
     def invalid_form(error):
@@ -57,7 +59,8 @@ def create_app(config_overrides=None):
     def too_large(error):
         return render_template(
             "error.html", title="This submission is too large",
-            message="Markdown imports must be 256 KB or smaller.",
+            message=("Choose a PDF of 4 MB or smaller." if request.endpoint == "admin.resume_pdf"
+                     else "This form exceeds the request size limit."),
         ), 413
 
     return app

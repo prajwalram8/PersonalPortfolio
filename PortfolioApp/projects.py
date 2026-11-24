@@ -40,6 +40,18 @@ markdown = (
 )
 
 
+def render_table_cell(self, tokens, index, options, env):
+    attributes = tokens[index].attrs
+    alignment = attributes.pop("style", None)
+    if alignment in {"text-align:center", "text-align:right"}:
+        attributes["class"] = "align-" + alignment.split(":")[1]
+    return self.renderToken(tokens, index, options, env)
+
+
+for cell in ("th_open", "td_open"):
+    markdown.add_render_rule(cell, render_table_cell)
+
+
 def render_markdown(source):
     return Markup(markdown.render(source or ""))
 

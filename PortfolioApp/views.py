@@ -1,11 +1,14 @@
+from io import BytesIO
+from pathlib import Path
 import re
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, current_app, flash, redirect, render_template, request, send_file, url_for
 
 from . import db
-from .models import ContactSubmission
-from .profile import WORK
+from .models import ContactSubmission, ResumeDocument
+from .profile import read_profile
 from .projects import published_posts
+from .security import rate_limit
 
 
 pages = Blueprint("pages", __name__)
@@ -14,21 +17,38 @@ pages = Blueprint("pages", __name__)
 @pages.get("/")
 def index():
     recent_posts = db.session.scalars(published_posts().limit(3)).all()
-    return render_template("index.html", recent_posts=recent_posts, work=WORK)
+    profile, _ = read_profile()
+    work = [entry for entry in profile["work"] if entry["featured"] == "yes"]
+    return render_template("index.html", recent_posts=recent_posts, profile=profile, work=work)
 
 
 @pages.get("/about")
 def about():
-    return render_template("about.html")
+    profile, _ = read_profile()
+    paragraphs = re.split(r"\n\s*\n", profile["about_text"])
+    return render_template("about.html", profile=profile, paragraphs=paragraphs)
 
 
 @pages.get("/resume")
 def resume():
-    return render_template("resume.html", work=WORK)
+    profile, _ = read_profile()
+    return render_template("resume.html", profile=profile)
+
+
+@pages.get("/resume.pdf")
+def resume_pdf():
+    bundled = Path(current_app.static_folder) / "pdf" / "Prajwal Ram Gowda.pdf"
+    custom = db.session.get(ResumeDocument, 1)
+    return send_file(
+        BytesIO(custom.payload) if custom else bundled,
+        mimetype="application/pdf", as_attachment=True,
+        download_name="Prajwal Ram Gowda.pdf", max_age=0,
+    )
 
 
 @pages.post("/submit_contact")
 @pages.route("/contact", methods=["GET", "POST"])
+@rate_limit("contact")
 def contact():
     values = {}
     errors = {}

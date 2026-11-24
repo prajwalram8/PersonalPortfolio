@@ -6,12 +6,10 @@
       <header class="page-heading">
         <p class="eyebrow"><span class="rule-mark" aria-hidden="true"></span> About</p>
         <h1>Hi, I’m <em>Prajwal.</em></h1>
-        <p>I build data systems and use them to help people make decisions.</p>
+        <p>{{ profile.about_lead }}</p>
       </header>
       <div class="prose about-copy">
-        <p>My first years in analytics were in Bengaluru, where I worked with healthcare claims and electronic health records to answer research questions. At DP World, I worked on a different puzzle: how to piece together a container’s journey when some of the timestamps are missing.</p>
-        <p>In Dubai, I helped build a business intelligence function for a group with eight affiliate businesses. That work meant bringing data from different systems together and agreeing on what a number should mean before putting it on a dashboard.</p>
-        <p>One question runs through all of it: what will someone do differently once they have this information?</p>
+        {% for paragraph in paragraphs %}<p>{{ paragraph }}</p>{% endfor %}
       </div>
       <div class="hero-actions">
         <a class="button button-primary" href="{{ url_for('pages.resume') }}">View résumé <span class="arrow-up" aria-hidden="true"></span></a>

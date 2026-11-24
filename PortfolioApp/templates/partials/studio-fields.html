@@ -1,0 +1,51 @@
+{% macro field_input(field, value, prefix="", is_title=false) %}
+  <div class="field">
+    <label>
+      <span class="editor-label">{{ field.label }}{% if not field.required and not field.choices %} <span class="field-hint">(optional)</span>{% endif %}</span>
+      {% set name = prefix ~ field.name %}
+      {% if field.choices %}
+        <select name="{{ name }}">
+          {% for key, label in field.choices %}
+            <option value="{{ key }}"{% if value == key %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      {% elif field.rows %}
+        <textarea name="{{ name }}" maxlength="{{ field.limit }}" rows="{{ field.rows }}"{% if field.required %} required{% endif %}>{{ value }}</textarea>
+      {% else %}
+        <input type="{{ field.kind }}" name="{{ name }}" value="{{ value }}" maxlength="{{ field.limit }}"{% if field.required %} required{% endif %}{% if is_title %} data-entry-title{% endif %}>
+      {% endif %}
+    </label>
+  </div>
+{% endmacro %}
+
+{% macro resume_entry(section, title_field, fields, row) %}
+  <details class="resume-edit-entry" data-entry{% if not row %} open{% endif %}>
+    <summary><span data-entry-label>{{ row.get(title_field) or 'New entry' }}</span></summary>
+    <div class="form-stack resume-edit-fields">
+      {% if section == "work" %}
+        <input type="hidden" name="work-slug" value="{{ row.get('slug', '') }}">
+      {% endif %}
+      {% for field in fields %}
+        {% if field.name == "featured" %}
+          <h3>Homepage card</h3>
+          <p class="field-hint">Fill in these fields to feature this experience in Selected work.</p>
+        {% endif %}
+        {{ field_input(field, row.get(field.name, ""), section ~ "-", field.name == title_field) }}
+      {% endfor %}
+      <div class="form-actions resume-entry-actions">
+        <button class="button button-secondary" type="button" data-entry-action="up" hidden>Move up</button>
+        <button class="button button-secondary" type="button" data-entry-action="down" hidden>Move down</button>
+        <button class="button button-danger" type="button" data-entry-action="remove" hidden>Remove</button>
+      </div>
+    </div>
+  </details>
+{% endmacro %}
+
+{% macro form_errors(errors) %}
+  {% if errors %}
+    <div class="notice notice-error" role="alert">
+      <p>Review these changes before saving.</p>
+      <ul>{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul>
+    </div>
+  {% endif %}
+{% endmacro %}

@@ -1,64 +1,68 @@
 {% extends "base.html" %}
 {% block title %}Résumé — Prajwal Ram Gowda{% endblock %}
+{% block body_class %}resume-page{% endblock %}
 {% block content %}
   <section class="shell page-section">
     <header class="page-heading resume-heading">
       <div>
         <p class="eyebrow"><span class="rule-mark" aria-hidden="true"></span> Résumé</p>
         <h1>Prajwal Ram <em>Gowda</em></h1>
-        <p>Business Intelligence &amp; Analytics · Dubai, UAE</p>
+        <p>{{ profile.resume_headline }}</p>
       </div>
-      <a class="button button-primary" href="{{ url_for('static', filename='pdf/Prajwal Ram Gowda.pdf') }}" download>Download PDF <span class="arrow-down" aria-hidden="true"></span></a>
+      <a class="button button-primary" href="{{ url_for('pages.resume_pdf') }}" download>Download PDF <span class="arrow-down" aria-hidden="true"></span></a>
     </header>
-    <div class="resume-section">
-      <h2>Experience</h2>
-      <div class="resume-entries">
-        {% for case in work %}
-          <article id="{{ case.slug }}">
-            <p class="eyebrow">{{ case.company }} · {{ case.location }} · {{ case.period }}</p>
-            <h3>{{ case.role }}</h3>
-            <p>{{ case.story }}</p>
-            <p class="resume-outcome">{{ case.outcome }}</p>
-          </article>
-        {% endfor %}
+    {% if profile.work %}
+      <div class="resume-section">
+        <h2>Experience</h2>
+        <div class="resume-entries">
+          {% for case in profile.work %}
+            <article id="{{ case.slug }}">
+              <p class="eyebrow">{{ [case.company, case.location, case.period] | select | join(' · ') }}</p>
+              <h3>{{ case.role }}</h3>
+              <p class="resume-description">{{ case.story }}</p>
+              {% if case.outcome %}<p class="resume-outcome">{{ case.outcome }}</p>{% endif %}
+            </article>
+          {% endfor %}
+        </div>
       </div>
-    </div>
-    <div class="resume-section">
-      <h2>Education</h2>
-      <div class="resume-entries">
-        <article>
-          <p class="eyebrow">SP Jain School of Global Management · 2023</p>
-          <h3>MBA, Finance</h3>
-        </article>
-        <article>
-          <p class="eyebrow">M. S. Ramaiah Institute of Technology · 2017</p>
-          <h3>Bachelor of Engineering, Industrial Engineering &amp; Management</h3>
-        </article>
+    {% endif %}
+    {% if profile.education %}
+      <div class="resume-section">
+        <h2>Education</h2>
+        <div class="resume-entries">
+          {% for entry in profile.education %}
+            <article>
+              <p class="eyebrow">{{ [entry.institution, entry.period] | select | join(' · ') }}</p>
+              <h3>{{ entry.title }}</h3>
+            </article>
+          {% endfor %}
+        </div>
       </div>
-    </div>
-    <div class="resume-section">
-      <h2>Tools I use</h2>
-      <div class="resume-entries">
-        <article>
-          <h3>Data platforms and BI</h3>
-          <p>SQL, Snowflake, BigQuery, Matillion, Power BI, and Tableau.</p>
-        </article>
-        <article>
-          <h3>Analysis and modeling</h3>
-          <p>Python, R, and SAS for statistical modeling, text analysis, and research.</p>
-        </article>
+    {% endif %}
+    {% if profile.skills %}
+      <div class="resume-section">
+        <h2>Tools I use</h2>
+        <div class="resume-entries">
+          {% for entry in profile.skills %}
+            <article>
+              <h3>{{ entry.title }}</h3>
+              <p class="resume-description">{{ entry.description }}</p>
+            </article>
+          {% endfor %}
+        </div>
       </div>
-    </div>
-    <div class="resume-section">
-      <h2>Publications</h2>
-      <div class="resume-entries">
-        <article>
-          <h3><a href="https://s3.amazonaws.com/HMP/hmp_ln/imported/2019-12/320-Demographic-Characteristics-Healthcare-Cost-an.pdf">Demographic characteristics, healthcare costs, and treatment patterns in major depressive disorder</a></h3>
-        </article>
-        <article>
-          <h3><a href="https://journals.lww.com/ajg/Fulltext/2020/10001/S0871_Costs_of_Inflammatory_Bowel_Disease_Related.872.aspx">Costs of inflammatory bowel disease–related hospitalizations</a></h3>
-        </article>
+    {% endif %}
+    {% if profile.publications %}
+      <div class="resume-section">
+        <h2>Publications</h2>
+        <div class="resume-entries">
+          {% for entry in profile.publications %}
+            <article>
+              <h3>{% if entry.url %}<a href="{{ entry.url }}">{{ entry.title }}</a>{% else %}{{ entry.title }}{% endif %}</h3>
+            </article>
+          {% endfor %}
+        </div>
       </div>
-    </div>
+    {% endif %}
   </section>
 {% endblock %}

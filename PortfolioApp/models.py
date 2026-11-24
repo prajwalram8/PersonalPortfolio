@@ -56,3 +56,21 @@ class MarkdownFile(db.Model):
     @property
     def is_published(self):
         return self.published_at is not None
+
+
+class SiteProfile(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    revision = db.Column(db.Integer, nullable=False)
+    content = db.Column(db.JSON, nullable=False)
+
+
+class ResumeDocument(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    payload = db.Column(db.LargeBinary, nullable=False)
+
+
+class RequestLimit(db.Model):
+    scope = db.Column(db.String(16), primary_key=True)
+    client_key = db.Column(db.String(64), primary_key=True)
+    count = db.Column(db.Integer, nullable=False)
+    expires_at = db.Column(db.Integer, nullable=False, index=True)

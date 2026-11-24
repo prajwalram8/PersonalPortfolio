@@ -12,6 +12,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from . import db, login_manager
 from .models import Category, ContactSubmission, MarkdownFile, User, utc_now
 from .projects import available_slug, render_markdown
+from .security import rate_limit
 
 
 admin = Blueprint("admin", __name__)
@@ -31,6 +32,7 @@ def require_owner():
 
 @admin.route("/login", methods=["GET", "POST"])
 @admin.route("/admin/login", methods=["GET", "POST"])
+@rate_limit("login")
 def login():
     if current_user.is_authenticated:
         return redirect(url_for("admin.dashboard"))
