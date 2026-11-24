@@ -1,0 +1,2 @@
+# The deployment user may stop and start only its own application.
+portfolio ALL=(root) NOPASSWD: /usr/bin/systemctl start personal-portfolio.service, /usr/bin/systemctl stop personal-portfolio.service

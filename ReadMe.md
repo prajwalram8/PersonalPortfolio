@@ -45,66 +45,81 @@ The web résumé has a print layout. Choose Print or Save as PDF in your browser
 
 ## Production deployment
 
-The deploy script targets one Linux server running systemd, Nginx, and Python 3.12. GitHub pushes run CI. A release goes live when you run the deploy command on the server.
+The portfolio runs on the Hostinger Ubuntu VPS as a dedicated Gunicorn service. Its own Nginx gateway listens on `127.0.0.1:8080` and forwards to a private Unix socket. The existing Cloudflare Tunnel sends the public hostname to this gateway and provides HTTPS. GitHub pushes run CI. Only a deploy from the VPS switches the running release.
 
-### Set up the server once
+### Prepare the portfolio service once
 
-1. Use a dedicated non-root account called `portfolio`. Clone this repo as that user with `git clone --branch portfolio-redesign https://github.com/prajwalram8/PersonalPortfolio.git personalportfolio`, then enter the clone. Enable its user services at boot with `sudo loginctl enable-linger portfolio`.
-2. As that user, create the private runtime directory and install the user unit.
-
-   ```sh
-   install -d -m 700 "$HOME/portfolio" "$HOME/.config/systemd/user"
-   install -m 644 deploy/personalportfolio.service "$HOME/.config/systemd/user/"
-   systemctl --user daemon-reload
-   systemctl --user enable personalportfolio.service
-   ```
-
-3. Save the following unquoted settings in `~/portfolio/production.env` with permissions `600`. Use the real public hostname and generate a fresh secret, for example with `openssl rand -hex 32`. Keep that secret stable between releases.
-
-   ```ini
-   PORTFOLIO_ENV=production
-   PORTFOLIO_SECRET_KEY=your_generated_secret
-   PORTFOLIO_TRUSTED_HOSTS=portfolio.example.com
-   PORTFOLIO_TRUST_PROXY=1
-   ```
-
-4. Ask the server administrator to create the deployment gate directory and install the Nginx snippet. Include it inside the site's HTTPS server block, after setting up DNS and a TLS certificate. Redirect HTTP and any aliases to the canonical HTTPS origin. Point all traffic to the app through this gate and keep port 5000 private. Check Nginx with `sudo nginx -t` and reload it. If a CDN fronts Nginx, let maintenance requests reach the origin, bypass caching for the app's forms and studio, and configure Nginx to use the provider's real client IP headers.
-
-   ```sh
-   sudo install -d -o portfolio -g portfolio -m 755 /var/lib/personalportfolio-gate
-   sudo install -m 644 deploy/nginx-portfolio.conf /etc/nginx/snippets/personalportfolio.conf
-   ```
-
-### Deploy a release
-
-Run the same command for each update. Prefer the exact commit SHA from a passing CI run when deploying to production.
+Confirm `8080` is free on the VPS with `sudo ss -ltnp 'sport = :8080'`. Check the existing connector and available disk space before changes. The portfolio uses Python 3.12 and the Ubuntu Nginx binary with the HTTP Real IP module. If Nginx is absent, have the VPS administrator arrange installation without enabling default public listeners. Use a dedicated, non-root `portfolio` account outside other apps' groups. Clone the repository as that user.
 
 ```sh
-./scripts/deploy.py deploy origin/portfolio-redesign --url https://portfolio.example.com
+git clone --branch portfolio-redesign https://github.com/prajwalram8/PersonalPortfolio.git personalportfolio
+cd personalportfolio
 ```
 
-For the first launch, add `--import-db /absolute/path/to/portfolio.sqlite` if you have an existing database. Stop any app or job writing to that file before importing, and keep it stopped after switching over. For a database created by the original `manage.py --init-db` that has no Alembic revision, also pass `--legacy-init-db`. The script checks that schema before stamping a copy. A first launch without an import starts with an empty database.
-
-After the first launch, create or reset your studio login with `./scripts/deploy.py owner YOUR_USERNAME`. That prompts for your password. Reset it if you used the legacy app, which wrote submitted passwords to its logs.
-
-### What happens to production data during updates
-
-- The script checks out the selected Git revision and installs its pinned dependencies in a new release while the current site keeps serving traffic.
-- It activates and verifies maintenance mode at the public HTTPS URL, then stops the app. It verifies a SQLite backup, restores that backup to a new database file, and applies migrations **to the copy**. Posts, drafts, inbox messages, profile changes, and uploaded PDFs come from the current production database.
-- It switches the code and database together, starts Gunicorn, and checks the app while public traffic is still gated. If a step fails, it switches back to the previous release with its untouched database. After opening the gate, it checks the public site. If that final check fails, the active database stays in place so any new writes are preserved.
-
-The site returns a short maintenance response during backup, migration, and cutover. The script keeps previous releases and backups on disk. Allow space for an extra database copy, a backup, and the new release. If a deployment is interrupted and leaves the gate closed, run `./scripts/deploy.py recover` as the deployment user. Recovery only rolls back while maintenance is active. Inspect the service with `journalctl --user -u personalportfolio.service`.
-
-### Launch checks and backups
-
-Use `./scripts/deploy.py check https://portfolio.example.com` any time. It checks the homepage, writing, résumé and PDF, contact form, protected studio redirect, and relevant HTTPS headers. Sign in and submit one test contact message in a browser to verify your actual credentials and inbox.
-
-Schedule off-host backups with the hosting provider or use the SQLite backup command below and copy the result to private off-host storage. Backups contain inbox messages and password hashes. Use a new destination file for every backup and restore.
+After approval for the VPS changes, the administrator can install the two dedicated systemd units, gateway configuration, and two-command sudo rule. Run these commands from the clone.
 
 ```sh
-cd "$HOME/portfolio/current"
+sudo install -d -o portfolio -g portfolio -m 700 /srv/personal-portfolio /srv/personal-portfolio/data
+sudo install -d -m 755 /etc/personal-portfolio
+sudo install -m 644 deploy/nginx-portfolio.conf /etc/personal-portfolio/gateway.conf
+sudo install -m 644 deploy/personal-portfolio.service deploy/personal-portfolio-gateway.service /etc/systemd/system/
+sudo visudo -cf deploy/personal-portfolio.sudoers
+sudo install -m 440 deploy/personal-portfolio.sudoers /etc/sudoers.d/personal-portfolio
+sudo systemctl daemon-reload
+sudo systemctl enable personal-portfolio.service
+sudo systemctl enable --now personal-portfolio-gateway.service
+```
+
+As `portfolio`, save the following unquoted settings in `/srv/personal-portfolio/production.env` and set permissions to `600`. Generate the session secret with `openssl rand -hex 32` and keep it stable between releases.
+
+```ini
+PORTFOLIO_ENV=production
+PORTFOLIO_SECRET_KEY=your_generated_secret
+PORTFOLIO_TRUSTED_HOSTS=prajwalramgowda.xyz
+PORTFOLIO_TRUST_PROXY=1
+```
+
+### First launch and Cloudflare
+
+Stage the first release before routing public traffic. This checks the local gateway and private app socket, so the apex DNS record can still be absent.
+
+```sh
+./scripts/deploy.py deploy origin/portfolio-redesign --local-only
+./scripts/deploy.py check --local
+```
+
+Add `--import-db /absolute/path/to/portfolio.sqlite` to import the original portfolio database on that first launch. Stop any app or job writing to the source before importing. Also pass `--legacy-init-db` for the original unversioned `manage.py --init-db` schema. The script stamps only the copy. Without an import, first launch starts with an empty database. Create or reset the studio login with `./scripts/deploy.py owner YOUR_USERNAME`.
+
+After local validation and approval for the public route, inspect Cloudflare DNS for existing records and preserve email and unrelated records. In the existing tunnel, add only the public **Published application** route for `prajwalramgowda.xyz` to **HTTP** `http://127.0.0.1:8080`, with no Access application for the public site. Set the route’s HTTP Host Header to `prajwalramgowda.xyz`. Cloudflare can manage the apex CNAME via flattening. The gateway redirects public HTTP to HTTPS and uses Cloudflare's client IP header for app rate limits. Keep origin headers intact and bypass edge caching for the portfolio's HTML, forms, and studio so the deployment gate reaches visitors.
+
+For `www`, use a hostname-scoped Cloudflare redirect to `https://prajwalramgowda.xyz` that preserves the path and query string. Give `www` a proxied DNS record for the redirect. The domain can use the same tunnel CNAME target as the apex. On Cloudflare, keep all private routes and Access policies scoped as they are.
+
+Check the public site after the DNS change.
+
+```sh
+./scripts/deploy.py check
+```
+
+The check covers the public homepage, writing, résumé PDF, contact form, studio sign-in redirect, and HTTPS headers. Finish by signing in and submitting a test contact message in a browser. Verify the existing private preview still requires Access, check that the private production app still works, and confirm the portfolio listens only on loopback.
+
+### Updates and recovery
+
+Use the following from the VPS after launch. Prefer the exact commit SHA from passing CI over a moving branch.
+
+```sh
+./scripts/deploy.py deploy origin/portfolio-redesign
+```
+
+The script stages the release before downtime and checks the maintenance gate locally and through Cloudflare before stopping Gunicorn. It backs up production SQLite, migrates a copy, and switches the code and database together. If private checks fail, it reactivates the previous release with its original database. After reopening traffic, it preserves the active database so any new edits or messages survive a public-check failure. `--local-only` is limited to first launch.
+
+The database copies and backups live in `/srv/personal-portfolio/data` and `/srv/personal-portfolio/backups`. Allow disk space for a new release, database copy, and backup. For an interrupted deployment, run `./scripts/deploy.py recover` as the deployment user. View application and gateway logs with `journalctl -u personal-portfolio.service -u personal-portfolio-gateway.service`. For a full launch withdrawal, remove only the new portfolio routes and DNS/redirect entries, then stop the portfolio's two units. The shared connector stays in service.
+
+### Backups
+
+Schedule private off-host backups in addition to the deployment snapshots. Backups contain inbox messages and password hashes. Use a new destination file every time and test restores separately. Run these commands as the deployment user, with backup destinations writable only by that user.
+
+```sh
+cd /srv/personal-portfolio/current
 PORTFOLIO_DATABASE="$PWD/database.sqlite" .venv/bin/python -m flask --app wsgi backup-db /private/backups/portfolio.sqlite
 .venv/bin/python -m flask --app wsgi restore-db /private/backups/portfolio.sqlite /private/restores/portfolio.sqlite
 ```
-
-Test restores in a separate instance. After a release has accepted public traffic, preserve the current database when diagnosing a problem. Reopening an older snapshot can discard posts, résumé edits, and messages received since that snapshot.

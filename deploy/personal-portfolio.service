@@ -1,0 +1,25 @@
+[Unit]
+Description=PersonalPortfolio Gunicorn
+ConditionPathIsDirectory=/srv/personal-portfolio/current
+
+[Service]
+User=portfolio
+Group=portfolio
+WorkingDirectory=/srv/personal-portfolio/current
+EnvironmentFile=/srv/personal-portfolio/production.env
+Environment=PORTFOLIO_DATABASE=/srv/personal-portfolio/current/database.sqlite
+ExecStart=/srv/personal-portfolio/current/.venv/bin/gunicorn --bind unix:/run/personal-portfolio/gunicorn.sock --workers 2 --umask 63 wsgi:app
+Restart=on-failure
+TimeoutStopSec=45
+RuntimeDirectory=personal-portfolio
+RuntimeDirectoryMode=0700
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/srv/personal-portfolio/data
+InaccessiblePaths=-/opt -/var/lib -/etc/cloudflared
+
+[Install]
+WantedBy=multi-user.target

@@ -1,15 +1,17 @@
 #!/usr/bin/env python3.12
-"""Deploy a Git revision on a single-host Gunicorn and Nginx installation."""
+"""Deploy the portfolio behind its VPS gateway and Cloudflare Tunnel."""
 
 import argparse
 from contextlib import closing, contextmanager
 from datetime import datetime, timezone
 import fcntl
+from http.client import HTTPConnection, HTTPException
 import json
 import os
 from pathlib import Path
 import re
 import signal
+import socket
 import sqlite3
 import subprocess
 import sys
@@ -21,8 +23,13 @@ from uuid import uuid4
 
 
 REPO = Path(__file__).resolve().parents[1]
-UNIT = "personalportfolio.service"
-LOOPBACK = "http://127.0.0.1:5000"
+ROOT = Path("/srv/personal-portfolio")
+UNIT = "personal-portfolio.service"
+GATEWAY_UNIT = "personal-portfolio-gateway.service"
+SYSTEMCTL = "/usr/bin/systemctl"
+ORIGIN = "https://prajwalramgowda.xyz"
+GATEWAY = "http://127.0.0.1:8080"
+BACKEND = Path("/run/personal-portfolio/gunicorn.sock")
 SETTING_NAMES = {"PORTFOLIO_ENV", "PORTFOLIO_SECRET_KEY", "PORTFOLIO_TRUSTED_HOSTS", "PORTFOLIO_TRUST_PROXY"}
 LEGACY_TABLES = {
     "user": {"id", "username", "password"},
@@ -41,6 +48,17 @@ class NoRedirect(HTTPRedirectHandler):
         return None
 
 
+class UnixHTTPConnection(HTTPConnection):
+    def __init__(self, path):
+        super().__init__("localhost", timeout=5)
+        self.path = path
+
+    def connect(self):
+        self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.sock.settimeout(self.timeout)
+        self.sock.connect(str(self.path))
+
+
 def https_origin(value):
     address = urlsplit(value)
     if (address.scheme != "https" or not address.hostname or address.username or address.password
@@ -55,14 +73,20 @@ def fetch(origin, path, host=None, size=0):
     if host:
         headers.update(Host=host, **{"X-Forwarded-Proto": "https"})
         handlers.append(ProxyHandler({}))
-    request = Request(origin + path, headers=headers, method="GET" if size else "HEAD")
+    method = "GET" if size else "HEAD"
     try:
+        if isinstance(origin, Path):
+            with closing(UnixHTTPConnection(origin)) as connection:
+                connection.request(method, path, headers=headers)
+                with connection.getresponse() as response:
+                    return response.status, response.headers, response.read(size)
+        request = Request(origin + path, headers=headers, method=method)
         with build_opener(*handlers).open(request, timeout=5) as response:
             return response.status, response.headers, response.read(size)
     except HTTPError as response:
         with response:
             return response.code, response.headers, b""
-    except (URLError, TimeoutError, OSError) as error:
+    except (URLError, TimeoutError, OSError, HTTPException) as error:
         raise DeploymentError(f"{origin}{path}: {error}") from error
 
 
@@ -72,7 +96,9 @@ def require(condition, message):
 
 
 def site_check(origin, host=None):
-    for path in ("/", "/writing", "/resume", "/resume.pdf", "/contact", "/admin"):
+    paths = ("/", "/writing", "/resume", "/resume.pdf", "/contact", "/admin",
+             "/static/css/styles.css", "/static/js/theme.js")
+    for path in paths:
         size = 64 * 1024 if path == "/contact" else (5 if path == "/resume.pdf" else 0)
         status, headers, body = fetch(origin, path, host, size)
         expected = 302 if path == "/admin" else 200
@@ -99,10 +125,10 @@ def wait_for_home(host):
     deadline = monotonic() + 25
     while True:
         try:
-            status, _, _ = fetch(LOOPBACK, "/", host)
+            status, _, _ = fetch(BACKEND, "/", host)
             if status == 200:
                 return
-            failure = DeploymentError(f"The app returned HTTP {status} on loopback.")
+            failure = DeploymentError(f"The app returned HTTP {status} on its private socket.")
         except DeploymentError as error:
             failure = error
         if monotonic() >= deadline:
@@ -110,10 +136,16 @@ def wait_for_home(host):
         sleep(.5)
 
 
-def check_gate(origin):
-    status, headers, _ = fetch(origin, f"/?portfolio-maintenance={uuid4().hex}")
+def check_gate(origin, host=None):
+    status, headers, _ = fetch(origin, f"/?portfolio-maintenance={uuid4().hex}", host)
     require(status == 503 and headers.get("X-Portfolio-Maintenance") == "1",
-            "The public URL did not report this deployment's maintenance gate. Check the Nginx configuration.")
+            f"{origin} did not report the portfolio maintenance gate. Check the gateway and Cloudflare route.")
+
+
+def verify_gates(origin, local_only):
+    check_gate(GATEWAY, urlsplit(origin).hostname)
+    if not local_only:
+        check_gate(origin)
 
 
 def read_settings(path, origin=None):
@@ -195,12 +227,14 @@ class Deployment:
             temporary.unlink(missing_ok=True)
 
     def unit(self, action, *, check=True):
-        return subprocess.run(["systemctl", "--user", action, UNIT], check=check,
-                              stdout=None if check else subprocess.DEVNULL)
+        command = [SYSTEMCTL, action, UNIT]
+        if action in {"start", "stop"}:
+            command[:0] = ["sudo", "-n"]
+        return subprocess.run(command, check=check, stdout=None if check else subprocess.DEVNULL)
 
     def verify_running_release(self, release):
         pid = subprocess.check_output(
-            ["systemctl", "--user", "show", "--property=MainPID", "--value", UNIT], text=True,
+            [SYSTEMCTL, "show", "--property=MainPID", "--value", UNIT], text=True,
         ).strip()
         require(pid.isdigit() and int(pid) > 0, f"{UNIT} is not running.")
         require(Path(f"/proc/{pid}/cwd").resolve(strict=True) == release,
@@ -241,9 +275,14 @@ class Deployment:
         print(f"Staged {revision}.", flush=True)
         return release
 
-    def record(self, previous, was_active, origin):
+    def record(self, previous, was_active, origin, local_only=False):
         with self.journal.open("x") as file:
-            json.dump({"previous": previous.name if previous else None, "was_active": was_active, "url": origin}, file)
+            json.dump({
+                "previous": previous.name if previous else None,
+                "was_active": was_active,
+                "url": origin,
+                "local_only": local_only,
+            }, file)
             file.flush()
             os.fsync(file.fileno())
 
@@ -253,7 +292,7 @@ class Deployment:
         self.journal.unlink()
 
     def rollback(self, state):
-        check_gate(state["url"])
+        verify_gates(state["url"], state.get("local_only", False))
         self.unit("stop")
         previous = self.releases / state["previous"] if state["previous"] else None
         require(previous is None or (previous.parent == self.releases and (previous / "database.sqlite").is_file()),
@@ -277,18 +316,20 @@ class Deployment:
             return
         self.rollback(json.loads(self.journal.read_text()))
 
-    def deploy(self, ref, origin, import_db, legacy):
+    def deploy(self, ref, origin, import_db, legacy, local_only=False):
         require(not self.journal.exists() and not self.gate.exists(),
                 "A maintenance gate or deployment journal already exists. Check it before deploying; use recover for an interrupted deploy.")
-        require(self.gate.parent.is_dir(), f"Create the Nginx maintenance directory {self.gate.parent} first.")
+        require(self.gate.parent.is_dir(), f"Create the portfolio runtime directory {self.gate.parent} first.")
         self.settings = read_settings(self.root / "production.env", origin)
         loaded = subprocess.check_output(
-            ["systemctl", "--user", "show", "--property=LoadState", "--value", UNIT], text=True,
+            [SYSTEMCTL, "show", "--property=LoadState", "--value", UNIT], text=True,
         ).strip()
-        require(loaded == "loaded", f"Install and load the {UNIT} user service first.")
+        require(loaded == "loaded", f"Install and load {UNIT} first.")
+        subprocess.run([SYSTEMCTL, "is-active", "--quiet", GATEWAY_UNIT], check=True)
         previous = self.active_release()
         was_active = self.unit("is-active", check=False).returncode == 0
         require(previous or not was_active, "The service is active without a managed release.")
+        require(not local_only or not previous, "--local-only is for first deployment. Updates must verify the Cloudflare route.")
         require(not import_db or (not previous and import_db.is_file()), "--import-db requires an existing file and no active release.")
         require(not legacy or import_db, "--legacy-init-db requires --import-db.")
         if not previous and not import_db:
@@ -304,13 +345,13 @@ class Deployment:
         release = self.stage(ref)
         candidate = self.root / "data" / f"{release.name}.sqlite"
         self.flask(release, candidate, "db", "heads")
-        self.record(previous, was_active, origin)
+        self.record(previous, was_active, origin, local_only)
         gated = False
         changed_service = False
         try:
             self.gate.touch(exist_ok=False)
             gated = True
-            check_gate(origin)
+            verify_gates(origin, local_only)
             changed_service = True
             self.unit("stop")
             if source:
@@ -327,8 +368,8 @@ class Deployment:
             host = urlsplit(origin).hostname
             wait_for_home(host)
             self.verify_running_release(release)
-            site_check(LOOPBACK, host)
-            check_gate(origin)
+            site_check(BACKEND, host)
+            verify_gates(origin, local_only)
             self.reopen()
         except (Exception, KeyboardInterrupt):
             if changed_service and self.gate.exists():
@@ -342,11 +383,15 @@ class Deployment:
                 self.journal.unlink(missing_ok=True)
             raise
 
-        print(f"Release {release.name} is live. Database: {candidate}", flush=True)
+        print(f"Release {release.name} is active. Database: {candidate}", flush=True)
         try:
-            site_check(origin)
+            if local_only:
+                site_check(GATEWAY, host)
+                print("Local launch checks passed. Publish the Cloudflare route, then run the public check.", flush=True)
+            else:
+                site_check(origin)
         except DeploymentError as error:
-            raise DeploymentError(f"The release is live and its database remains active, but the public check failed: {error}") from error
+            raise DeploymentError(f"The release and database remain active, but the launch check failed: {error}") from error
 
 
 def main():
@@ -354,11 +399,13 @@ def main():
     commands = parser.add_subparsers(dest="command", required=True)
     deploy = commands.add_parser("deploy", help="Stage, migrate, check, and activate a Git revision.")
     deploy.add_argument("ref")
-    deploy.add_argument("--url", required=True, type=https_origin)
+    deploy.add_argument("--url", default=ORIGIN, type=https_origin)
+    deploy.add_argument("--local-only", action="store_true", help="Verify the first release locally before publishing DNS.")
     deploy.add_argument("--import-db", type=Path, help="Copy an existing SQLite database on the first deployment.")
     deploy.add_argument("--legacy-init-db", action="store_true", help="Import the original unversioned init-db schema.")
-    check = commands.add_parser("check", help="Check the live HTTPS site without writing to it.")
-    check.add_argument("url", type=https_origin)
+    check = commands.add_parser("check", help="Check the public HTTPS site or the local gateway without writing to either.")
+    check.add_argument("url", nargs="?", default=ORIGIN, type=https_origin)
+    check.add_argument("--local", action="store_true", help="Check port 8080 on the VPS instead of going through Cloudflare.")
     commands.add_parser("recover", help="Recover an interrupted deployment while maintenance is active.")
     owner = commands.add_parser("owner", help="Create or reset the owner on the active release.")
     owner.add_argument("username")
@@ -366,13 +413,18 @@ def main():
 
     os.umask(0o077)
     if args.command == "check":
-        site_check(args.url)
+        if args.local:
+            site_check(GATEWAY, urlsplit(args.url).hostname)
+        else:
+            site_check(args.url)
         return
-    root = (Path.home() / "portfolio").resolve()
-    deployment = Deployment(root, Path("/var/lib/personalportfolio-gate/maintenance"))
+    require(os.geteuid() != 0, "Run deployment commands as the dedicated portfolio user.")
+    root = ROOT.resolve()
+    deployment = Deployment(root, root / "maintenance")
     with deployment.lock():
         if args.command == "deploy":
-            deployment.deploy(args.ref, args.url, args.import_db.resolve() if args.import_db else None, args.legacy_init_db)
+            deployment.deploy(args.ref, args.url, args.import_db.resolve() if args.import_db else None,
+                              args.legacy_init_db, local_only=args.local_only)
         elif args.command == "recover":
             deployment.recover()
         else:

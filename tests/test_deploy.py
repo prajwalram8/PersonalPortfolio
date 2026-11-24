@@ -1,8 +1,11 @@
+from http.server import BaseHTTPRequestHandler
 from pathlib import Path
+from socketserver import UnixStreamServer
 from tempfile import TemporaryDirectory
 import unittest
-from unittest.mock import patch
+from unittest.mock import call, patch
 from types import SimpleNamespace
+from threading import Thread
 
 from PortfolioApp import create_app, db
 from PortfolioApp.models import ContactSubmission, MarkdownFile, ResumeDocument, SiteProfile, utc_now
@@ -68,8 +71,9 @@ class DeploymentTests(unittest.TestCase):
         env.chmod(0o600)
 
         self.enterContext(patch("scripts.deploy.subprocess.check_output", return_value="loaded\n"))
+        self.gateway_status = self.enterContext(patch("scripts.deploy.subprocess.run"))
         self.enterContext(patch("scripts.deploy.wait_for_home"))
-        self.enterContext(patch("scripts.deploy.check_gate", side_effect=self.check_gate))
+        self.gates = self.enterContext(patch("scripts.deploy.check_gate", side_effect=self.check_gate))
         self.checks = self.enterContext(patch("scripts.deploy.site_check", side_effect=self.check_site))
         self.source = Path(directory) / "existing.sqlite"
         app = app_for(self.source)
@@ -80,19 +84,44 @@ class DeploymentTests(unittest.TestCase):
             db.session.add(ContactSubmission(message="Original inbox message"))
             db.session.commit()
 
-    def check_gate(self, origin):
-        self.assertEqual(origin, HTTP_ORIGIN)
+    def check_gate(self, origin, host=None):
+        if origin == deploy.GATEWAY:
+            self.assertEqual(host, "portfolio.example.com")
+        else:
+            self.assertEqual(origin, HTTP_ORIGIN)
+            self.assertIsNone(host)
         self.assertTrue(self.host.gate.is_file())
 
     def check_site(self, origin, host=None):
         self.assertTrue(self.host.running)
         # The private checks must run while the gate is closed to public traffic.
-        self.assertEqual(self.host.gate.is_file(), origin == deploy.LOOPBACK)
+        self.assertEqual(self.host.gate.is_file(), origin == deploy.BACKEND)
 
     def first_release(self):
         with self.host.lock():
             self.host.deploy("origin/portfolio-redesign", HTTP_ORIGIN, self.source, legacy=False)
         return self.host.active_release()
+
+
+    def test_local_first_launch_uses_gateway_without_public_dns(self):
+        with self.host.lock():
+            self.host.deploy("origin/portfolio-redesign", HTTP_ORIGIN, self.source, legacy=False, local_only=True)
+        self.gateway_status.assert_called_once_with(
+            [deploy.SYSTEMCTL, "is-active", "--quiet", deploy.GATEWAY_UNIT], check=True,
+        )
+        self.assertEqual(self.gates.call_args_list, [call(deploy.GATEWAY, "portfolio.example.com")] * 2)
+        self.assertEqual(self.checks.call_args_list, [
+            call(deploy.BACKEND, "portfolio.example.com"), call(deploy.GATEWAY, "portfolio.example.com"),
+        ])
+        with self.host.lock(), self.assertRaisesRegex(deploy.DeploymentError, "first deployment"):
+            self.host.deploy("origin/portfolio-redesign", HTTP_ORIGIN, None, legacy=False, local_only=True)
+
+    def test_public_update_checks_the_gateway_and_public_route(self):
+        self.first_release()
+        self.assertEqual(self.gates.call_args_list, [
+            call(deploy.GATEWAY, "portfolio.example.com"), call(HTTP_ORIGIN),
+            call(deploy.GATEWAY, "portfolio.example.com"), call(HTTP_ORIGIN),
+        ])
 
     def test_populated_import_and_update_keep_latest_production_content(self):
         first = self.first_release()
@@ -154,7 +183,7 @@ class DeploymentTests(unittest.TestCase):
                 raise deploy.DeploymentError("Public check failed")
 
         self.checks.side_effect = fail_after_first_write
-        with self.host.lock(), self.assertRaisesRegex(deploy.DeploymentError, "database remains active"):
+        with self.host.lock(), self.assertRaisesRegex(deploy.DeploymentError, "database remain active"):
             self.host.deploy("origin/portfolio-redesign", HTTP_ORIGIN, None, legacy=False)
         latest = self.host.active_release()
         self.assertNotEqual(latest, first)
@@ -167,8 +196,13 @@ class DeploymentTests(unittest.TestCase):
     def test_unverified_gate_keeps_service_running(self):
         first = self.first_release()
         self.host.calls.clear()
-        with patch("scripts.deploy.check_gate", side_effect=deploy.DeploymentError("Proxy gate unavailable")):
-            with self.host.lock(), self.assertRaisesRegex(deploy.DeploymentError, "Proxy gate unavailable"):
+        def fail_public_gate(origin, host=None):
+            if origin == HTTP_ORIGIN:
+                raise deploy.DeploymentError("Cloudflare gate unavailable")
+            self.check_gate(origin, host)
+
+        with patch("scripts.deploy.check_gate", side_effect=fail_public_gate):
+            with self.host.lock(), self.assertRaisesRegex(deploy.DeploymentError, "Cloudflare gate unavailable"):
                 self.host.deploy("origin/portfolio-redesign", HTTP_ORIGIN, None, legacy=False)
         self.assertEqual(self.host.calls, ["is-active"])
         self.assertEqual(self.host.active_release(), first)
@@ -201,3 +235,30 @@ class DeploymentTests(unittest.TestCase):
             self.host.deploy("origin/portfolio-redesign", HTTP_ORIGIN, legacy, legacy=True)
         with app_for(self.host.active_release() / "database.sqlite").app_context():
             self.assertEqual(db.session.scalar(db.select(ContactSubmission)).message, "Imported message")
+
+
+class UnixSocketCheckTests(unittest.TestCase):
+    def test_health_probe_uses_the_private_socket_and_public_host_headers(self):
+        class Handler(BaseHTTPRequestHandler):
+            def do_GET(self):
+                body = f"{self.headers['Host']} {self.headers['X-Forwarded-Proto']}".encode()
+                self.send_response(200)
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, format, *args):
+                pass
+
+        with TemporaryDirectory() as directory:
+            socket_path = Path(directory) / "app.sock"
+            with UnixStreamServer(str(socket_path), Handler) as server:
+                server.timeout = 3
+                thread = Thread(target=server.handle_request, daemon=True)
+                thread.start()
+                try:
+                    status, _, body = deploy.fetch(socket_path, "/", "portfolio.example.com", size=64)
+                    self.assertEqual(status, 200)
+                    self.assertEqual(body, b"portfolio.example.com https")
+                finally:
+                    thread.join(timeout=4)
