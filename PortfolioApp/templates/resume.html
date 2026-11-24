@@ -1,18 +1,64 @@
-<!-- about.html -->
 {% extends "base.html" %}
-
-{% block title %}Prajwal Ram Gowda - About{% endblock %}
-
+{% block title %}Résumé — Prajwal Ram Gowda{% endblock %}
 {% block content %}
-<main id="main">
-  <div class="pdf-container">
-    <object data="{{ url_for('static', filename='pdf/Prajwal Ram Gowda.pdf') }}" type="application/pdf" class="pdf-object">
-      <embed src="{{ url_for('static', filename='pdf/Prajwal Ram Gowda.pdf') }}" class="pdf-embed">
-          <p>This browser does not support PDFs. Please download the PDF to view it: <a href="{{ url_for('static', filename='pdf/Prajwal Ram Gowda.pdf') }}">Download PDF</a>.</p>  
-      </embed>
-    </object>
-  </div>
-</main>
-<script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+  <section class="shell page-section">
+    <header class="page-heading resume-heading">
+      <div>
+        <p class="eyebrow"><span class="rule-mark" aria-hidden="true"></span> Résumé</p>
+        <h1>Prajwal Ram <em>Gowda</em></h1>
+        <p>Business Intelligence &amp; Analytics · Dubai, UAE</p>
+      </div>
+      <a class="button button-primary" href="{{ url_for('static', filename='pdf/Prajwal Ram Gowda.pdf') }}" download>Download PDF <span class="arrow-down" aria-hidden="true"></span></a>
+    </header>
+    <div class="resume-section">
+      <h2>Experience</h2>
+      <div class="resume-entries">
+        {% for case in work %}
+          <article id="{{ case.slug }}">
+            <p class="eyebrow">{{ case.company }} · {{ case.location }} · {{ case.period }}</p>
+            <h3>{{ case.role }}</h3>
+            <p>{{ case.story }}</p>
+            <p class="resume-outcome">{{ case.outcome }}</p>
+          </article>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="resume-section">
+      <h2>Education</h2>
+      <div class="resume-entries">
+        <article>
+          <p class="eyebrow">SP Jain School of Global Management · 2023</p>
+          <h3>MBA, Finance</h3>
+        </article>
+        <article>
+          <p class="eyebrow">M. S. Ramaiah Institute of Technology · 2017</p>
+          <h3>Bachelor of Engineering, Industrial Engineering &amp; Management</h3>
+        </article>
+      </div>
+    </div>
+    <div class="resume-section">
+      <h2>Tools I use</h2>
+      <div class="resume-entries">
+        <article>
+          <h3>Data platforms and BI</h3>
+          <p>SQL, Snowflake, BigQuery, Matillion, Power BI, and Tableau.</p>
+        </article>
+        <article>
+          <h3>Analysis and modeling</h3>
+          <p>Python, R, and SAS for statistical modeling, text analysis, and research.</p>
+        </article>
+      </div>
+    </div>
+    <div class="resume-section">
+      <h2>Publications</h2>
+      <div class="resume-entries">
+        <article>
+          <h3><a href="https://s3.amazonaws.com/HMP/hmp_ln/imported/2019-12/320-Demographic-Characteristics-Healthcare-Cost-an.pdf">Demographic characteristics, healthcare costs, and treatment patterns in major depressive disorder</a></h3>
+        </article>
+        <article>
+          <h3><a href="https://journals.lww.com/ajg/Fulltext/2020/10001/S0871_Costs_of_Inflammatory_Bowel_Disease_Related.872.aspx">Costs of inflammatory bowel disease–related hospitalizations</a></h3>
+        </article>
+      </div>
+    </div>
+  </section>
 {% endblock %}

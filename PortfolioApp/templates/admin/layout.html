@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Studio — Prajwal Ram Gowda{% endblock %}
+{% block head %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+{% block content %}
+  <section class="shell page-section studio">
+    {% if current_user.is_authenticated %}
+      <nav class="studio-nav" aria-label="Studio navigation">
+        <a href="{{ url_for('admin.dashboard') }}">Posts</a>
+        <a href="{{ url_for('admin.topics') }}">Topics</a>
+        <a href="{{ url_for('admin.inbox') }}">Inbox</a>
+        <form action="{{ url_for('admin.logout') }}" method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="plain-button" type="submit">Sign out</button>
+        </form>
+      </nav>
+    {% endif %}
+    {% include "partials/flash.html" %}
+    {% block studio_content %}{% endblock %}
+  </section>
+{% endblock %}

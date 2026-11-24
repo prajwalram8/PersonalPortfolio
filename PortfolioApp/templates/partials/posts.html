@@ -1,0 +1,13 @@
+{% macro post_row(post, heading='h2') %}
+  <article class="post-row">
+    <div class="post-meta">
+      <time datetime="{{ post.published_at.date().isoformat() }}">{{ post.published_at.strftime('%b %Y') }}</time>
+      {% if post.category and post.category.label %}<span>{{ post.category.label }}</span>{% endif %}
+    </div>
+    <div>
+      <{{ heading }}><a href="{{ url_for('writing.article', slug=post.slug) }}">{{ post.name or 'Untitled post' }}</a></{{ heading }}>
+      {% if post.summary %}<p>{{ post.summary }}</p>{% endif %}
+    </div>
+    <a class="post-arrow" href="{{ url_for('writing.article', slug=post.slug) }}" aria-label="Read {{ post.name or 'post' }}"><span class="arrow-up" aria-hidden="true"></span></a>
+  </article>
+{% endmacro %}

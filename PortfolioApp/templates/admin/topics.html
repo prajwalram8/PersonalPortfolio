@@ -1,0 +1,41 @@
+{% extends "admin/layout.html" %}
+{% block studio_content %}
+  <header class="page-heading">
+    <h1>Topics</h1>
+    <p>Group related posts on the writing page.</p>
+  </header>
+  <form class="panel form-stack" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="field-grid">
+      <div class="field">
+        <label for="new-topic">New topic</label>
+        <input name="name" id="new-topic" maxlength="80" required>
+      </div>
+      <div class="field">
+        <label for="new-subtopic">Subtopic (optional)</label>
+        <input name="subcategory" id="new-subtopic" maxlength="80">
+      </div>
+    </div>
+    <button class="button button-primary" type="submit">Add topic</button>
+  </form>
+  {% for category in categories %}
+    <form class="panel form-stack topic-entry" method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="id" value="{{ category.id }}">
+      <div class="field-grid">
+        <div class="field">
+          <label for="topic-{{ category.id }}">Topic</label>
+          <input name="name" id="topic-{{ category.id }}" value="{{ category.category or '' }}" maxlength="80" required>
+        </div>
+        <div class="field">
+          <label for="subtopic-{{ category.id }}">Subtopic (optional)</label>
+          <input name="subcategory" id="subtopic-{{ category.id }}" value="{{ category.subcategory or '' }}" maxlength="80">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="button button-secondary" type="submit" name="action" value="save">Save topic</button>
+        <button class="button button-danger" type="submit" name="action" value="delete" formnovalidate>Delete topic</button>
+      </div>
+    </form>
+  {% endfor %}
+{% endblock %}

@@ -1,0 +1,3 @@
+{% for category, message in get_flashed_messages(with_categories=true) %}
+  <p class="notice{% if category == 'error' %} notice-error{% endif %}" role="{{ 'alert' if category == 'error' else 'status' }}">{{ message }}</p>
+{% endfor %}

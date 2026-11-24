@@ -1,10 +1,22 @@
 import os
-import binascii
+from pathlib import Path
+from secrets import token_hex
 
-DEBUG = False
 
-# Generate a random secret key
-SECRET_KEY = 'e040cec8b0f2f050c14643973a8db06abe4b2a50ff554d62'
+def load_config():
+    production = os.environ.get("PORTFOLIO_ENV") == "production"
+    secret = os.environ.get("PORTFOLIO_SECRET_KEY")
+    if production and (not secret or len(secret) < 32):
+        raise RuntimeError("Set PORTFOLIO_SECRET_KEY to a random secret of at least 32 characters.")
 
-root = os.path.abspath(os.path.dirname(__file__))
-SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(root, 'sqlite3.db')
+    database = Path(os.environ.get("PORTFOLIO_DATABASE", Path(__file__).with_name("sqlite3.db")))
+    return {
+        "SECRET_KEY": secret or token_hex(32),
+        "SQLALCHEMY_DATABASE_URI": f"sqlite:///{database.resolve()}",
+        "SESSION_COOKIE_HTTPONLY": True,
+        "SESSION_COOKIE_SAMESITE": "Lax",
+        "SESSION_COOKIE_SECURE": production,
+        "MAX_CONTENT_LENGTH": 768 * 1024,
+        "MAX_FORM_MEMORY_SIZE": 768 * 1024,
+        "PREVIEW_MODE": False,
+    }

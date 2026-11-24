@@ -1,75 +1,49 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-   <head>
-      <meta charset="utf-8">
-      <meta content="width=device-width, initial-scale=1.0" name="viewport">
-      <title>{% block title %}Prajwal Ram Gowda{% endblock %}</title>
-      <meta name="description" content="Prajwal Ram Gowda - Expert in Business Intelligence and Data Analytics. Skilled in Python, R, SQL, PowerBI, Azure, and Spark. Experienced in ETL Processes and Decision Science. MBA in Finance, based in Dubai.">
-      <meta name="keywords" content="Business Intelligence, Data Analytics, Advanced Analytics, Data Strategy, ETL, Analytics Management, Decision Science, Python, R Programming, SQL, PowerBI, Data Visualization, Azure, Spark, MBA Finance, Dubai Professional">
-      <!-- Favicons -->
-      <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='img/favicons/apple-touch-icon.png') }}">
-      <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='img/favicons/favicon-32x32.png') }}">
-      <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='img/favicons/favicon-16x16.png') }}">
-      <link rel="manifest" href="{{ url_for('static', filename='img/favicons/site.webmanifest') }}">
-      <!-- Font Awesome icons (free version)-->
-      <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
-      <!-- Google fonts-->
-      <link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-      <link href="https://fonts.googleapis.com/css2?family=Sen:wght@400;700&display=swap" rel="stylesheet">
-      <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet" />
-      <!-- Table CSS-->
-      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
-      <link rel="stylesheet" href="https://unpkg.com/bootstrap-table@1.22.1/dist/bootstrap-table.min.css">
-      <!-- Core theme CSS (includes Bootstrap)-->
-      <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet" />
-      <!-- Global site tag (gtag.js) - Google Analytics -->
-      <!-- Google tag (gtag.js) -->
-      <script async src="https://www.googletagmanager.com/gtag/js?id=G-MP7Y9P8XT6"></script>
-      <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-
-        gtag('config', 'G-MP7Y9P8XT6');
-      </script>
-   </head>
-   <body id="page-top">
-      <!-- Navigation-->
-      <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
-         <div class="container-fluid">
-            <a class="navbar-brand" href="#">PRG</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-               <ul class="navbar-nav">
-                  <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}">Home</a></li>
-                  <li class="nav-item"><a class="nav-link" href="{{ url_for('about') }}">About</a></li>
-                  <li class="nav-item"><a class="nav-link" href="{{ url_for('contact') }}">Contact</a></li>
-                  <!--li class="nav-item"><a class="nav-link" href="{{ url_for('resume') }}">Resume</a></li-->
-                  <li class="nav-item"><a class="nav-link" href="{{ url_for('blog') }}">Blog</a></li>
-               </ul>
-            </div>
-         </div>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{% block description %}Prajwal Ram Gowda. Business intelligence, analytics, and writing on data and decisions.{% endblock %}">
+  <meta name="color-scheme" content="light dark">
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/portfolio.js') }}" defer></script>
+  <title>{% block title %}Prajwal Ram Gowda — Data &amp; Decision Sciences{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='img/favicons/favicon.ico') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="wordmark" href="{{ url_for('pages.index') }}" aria-label="Prajwal Ram Gowda, home"><span class="wordmark-icon" aria-hidden="true">✳</span> Prajwal<span class="wordmark-dot">.</span></a>
+      <nav class="site-nav" aria-label="Main navigation">
+        {% for endpoint, label in [('pages.about', 'About'), ('pages.resume', 'Résumé'), ('writing.blog', 'Writing')] %}
+          {% set active = request.endpoint == endpoint or (endpoint == 'writing.blog' and request.blueprint == 'writing') %}
+          <a href="{{ url_for(endpoint) }}"{% if active %} aria-current="page"{% endif %}>{{ label }}</a>
+        {% endfor %}
+        <a class="nav-contact" href="{{ url_for('pages.contact') }}"{% if request.endpoint == 'pages.contact' %} aria-current="page"{% endif %}>Get in touch <span class="arrow-up" aria-hidden="true"></span></a>
       </nav>
-      {% block content %}
-      <!-- Default content goes here -->
-      {% endblock %}
-      <!-- Footer-->
-      <footer class="footer bg-black small text-center text-white-50 fixed-bottom">
-         <div class="container px-4 px-lg-5">
-            <div class="footer-content">
-               <div class="footer-text">
-                  Copyright &copy; Prajwal Ram Gowda 2023
-               </div>
-               <!-- Social Media Links -->
-               <div class="social-icons">
-                  <a href="https://www.linkedin.com/in/prajwal-ram-gowda/" target="_blank"><i class="fab fa-linkedin"></i></a>
-                  <a href="https://github.com/prajwalram8" target="_blank"><i class="fab fa-github"></i></a>
-               </div>
-            </div>
-         </div>
-      </footer>
-   </body>
+      <button class="theme-toggle" type="button" data-theme-toggle aria-label="Dark mode" aria-pressed="false" title="Dark mode" hidden>
+        <span class="theme-icon" aria-hidden="true"></span>
+      </button>
+    </div>
+  </header>
+  <main id="main">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <div>
+        <a class="footer-name" href="{{ url_for('pages.index') }}">Prajwal Ram Gowda<span>.</span></a>
+        <p>Data &amp; Decision Sciences · Dubai, UAE</p>
+      </div>
+      <nav class="footer-links" aria-label="Social links">
+        <a href="https://www.linkedin.com/in/prajwal-ram-gowda/">LinkedIn <span class="arrow-up" aria-hidden="true"></span></a>
+        <a href="https://github.com/prajwalram8">GitHub <span class="arrow-up" aria-hidden="true"></span></a>
+        <a href="{{ url_for('pages.contact') }}">Contact <span class="arrow-up" aria-hidden="true"></span></a>
+      </nav>
+    </div>
+  </footer>
+</body>
 </html>

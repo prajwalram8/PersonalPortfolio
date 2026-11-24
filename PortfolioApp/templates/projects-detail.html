@@ -1,59 +1,20 @@
 {% extends "base.html" %}
+{% block title %}{{ post.name or 'Article' }} — Prajwal Ram Gowda{% endblock %}
+{% block description %}{{ post.summary or 'Writing by Prajwal Ram Gowda.' }}{% endblock %}
 {% block content %}
-
-<section></section>
-	<div class="container">
-		<zero-md>
-			<script type="text/markdown">
-				{{ md_content|safe }}
-			</script>
-		</zero-md>
-	</div>
-	<div id="mdContent" style="display: none;">
-    		{{ md_content|safe }}
-	</div>
-<section></section>
-
-<script>
-    // Configure MathJax settings
-    MathJax = {
-      tex: {
-        inlineMath: [
-          ['$', '$'],
-          ['\\(', '\\)']
-        ]
-      }
-    }
-    addEventListener('zero-md-rendered', () => MathJax.typeset())
-</script>
-
-<script>
-    // Make use of global config object to change default options
-    window.ZeroMdConfig = {
-      prismUrl: [
-        // Default Prism URLs
-        ['https://cdn.jsdelivr.net/gh/PrismJS/prism@1/prism.min.js', 'data-manual'],
-        'https://cdn.jsdelivr.net/gh/PrismJS/prism@1/plugins/autoloader/prism-autoloader.min.js',
-        // Also load Prism's `toolbar` and `copy-to-clipboard` plugins
-        'https://cdn.jsdelivr.net/gh/PrismJS/prism@1/plugins/toolbar/prism-toolbar.min.js',
-        'https://cdn.jsdelivr.net/gh/PrismJS/prism@1/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js'
-      ],
-      cssUrls: [
-        // Default stylesheets
-        'https://cdn.jsdelivr.net/gh/sindresorhus/github-markdown-css@4/github-markdown.min.css',
-        'https://cdn.jsdelivr.net/gh/PrismJS/prism@1/themes/prism.min.css',
-        // Include CSS for `toolbar` plugin
-        'https://cdn.jsdelivr.net/gh/PrismJS/prism@1/plugins/toolbar/prism-toolbar.min.css'
-      ]
-    }
-</script>
-
-<!-- Load MathJax library -->
-<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
-<!-- Load zero-md library-->
-<script type="module" src="https://cdn.jsdelivr.net/gh/zerodevx/zero-md@2/dist/zero-md.min.js"></script>
-<!-- Load jquery-->
-<script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
-<!-- Load bootstrap js -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+  <div class="reading-progress" data-reading-progress aria-hidden="true" hidden></div>
+  <article class="shell article-page" data-reading-article>
+    <header class="article-heading">
+      <a class="text-link article-back" href="{{ url_for('writing.blog') }}"><span aria-hidden="true">←</span> All writing</a>
+      <div class="post-meta">
+        {% if post.category and post.category.label %}<span>{{ post.category.label }}</span>{% endif %}
+        <time datetime="{{ post.published_at.date().isoformat() }}">{{ post.published_at.strftime('%d %B %Y') }}</time>
+      </div>
+      <h1>{{ post.name or 'Untitled post' }}</h1>
+      {% if post.summary %}<p class="article-lede">{{ post.summary }}</p>{% endif %}
+      {% if post.author_name %}<p class="byline">By {{ post.author_name }}</p>{% endif %}
+      {% if config.PREVIEW_MODE %}<p class="preview-note">Development preview · Sample article</p>{% endif %}
+    </header>
+    <div class="prose">{{ article_html }}</div>
+  </article>
 {% endblock %}

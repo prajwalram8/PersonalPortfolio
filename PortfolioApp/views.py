@@ -1,43 +1,58 @@
-from . import app, db
-from .models import ContactSubmission, MarkdownFile
-from flask import render_template, request, redirect, url_for, flash
+import re
+
+from flask import Blueprint, flash, redirect, render_template, request, url_for
+
+from . import db
+from .models import ContactSubmission
+from .profile import WORK
+from .projects import published_posts
 
 
-# Home page
-@app.route('/')
+pages = Blueprint("pages", __name__)
+
+
+@pages.get("/")
 def index():
-    return render_template('index.html', active_page='index')
+    recent_posts = db.session.scalars(published_posts().limit(3)).all()
+    return render_template("index.html", recent_posts=recent_posts, work=WORK)
 
-# About Page
-@app.route('/about')
+
+@pages.get("/about")
 def about():
-    return render_template('about.html', active_page = 'about')
+    return render_template("about.html")
 
-# Resume Page
-@app.route('/resume')
+
+@pages.get("/resume")
 def resume():
-    return render_template('resume.html', active_page = 'resume')
+    return render_template("resume.html", work=WORK)
 
 
-# ##################################################################################
-# Contact
-# ##################################################################################
-
-@app.route('/contact', methods=['GET'])
+@pages.post("/submit_contact")
+@pages.route("/contact", methods=["GET", "POST"])
 def contact():
-    return render_template('contact.html', active_page = 'contact')
+    values = {}
+    errors = {}
+    if request.method == "POST":
+        if request.form.get("website"):
+            flash("Thanks for getting in touch.")
+            return redirect(url_for("pages.contact"), code=303)
 
-# Submit Contact
-@app.route('/submit_contact', methods=['POST'])
-def submit_contact():
-    name = request.form['name']
-    email = request.form['email']
-    subject = request.form['subject']
-    message = request.form['message']
+        limits = {"name": 150, "email": 150, "subject": 300, "message": 5000}
+        for field, limit in limits.items():
+            value = request.form.get(field, "").strip()
+            values[field] = value
+            if not value or len(value) > limit:
+                errors[field] = f"Enter between 1 and {limit} characters."
+        if "email" not in errors:
+            if not re.fullmatch(r"[^@\s]+@[^@\s.]+(?:\.[^@\s.]+)+", values["email"]):
+                errors["email"] = "Enter a valid email address."
 
-    submission = ContactSubmission(name=name, email=email, subject=subject, message=message)
-    db.session.add(submission)
-    db.session.commit()
+        if not errors:
+            db.session.add(ContactSubmission(**values))
+            db.session.commit()
+            flash("Thanks for getting in touch. Your message has been received.")
+            return redirect(url_for("pages.contact"), code=303)
 
-    flash("Your message has been sent. Thank you!")  # Flash a success message
-    return redirect(url_for('contact'))
+    return render_template(
+        "contact.html", values=values, errors=errors,
+    ), (422 if errors else 200)
