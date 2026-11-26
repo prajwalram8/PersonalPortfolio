@@ -2,6 +2,20 @@
 
 A Flask and SQLite website for Prajwal Ram Gowda. The public site contains a portfolio, web résumé with a downloadable PDF, writing, and a contact form. The private studio handles Markdown publishing, topics, the contact inbox, and profile and résumé editing.
 
+## Static portfolio
+
+The root `index.html` is the static portfolio, split from the approved `reference/prajwal-portfolio.html`. It uses plain HTML, CSS, JavaScript and self-hosted fonts.
+
+Preview from the repository root:
+
+```sh
+python3 -m http.server 8080
+```
+
+Open `http://localhost:8080/`. The approved reference is available at `/reference/prajwal-portfolio.html`.
+
+To publish through GitHub Pages, first merge the static portfolio into the default branch. In **Settings → Pages → Build and deployment**, select **Deploy from a branch**, then choose the default branch and **/(root)**. Save the settings and use the published URL shown by GitHub. The Flask application has its own development and VPS workflow below.
+
 ## Local development
 
 From the repository root:
